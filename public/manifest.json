@@ -1,0 +1,17 @@
+{
+  "name": "Teater KPMBP Hub",
+  "short_name": "Teater KPMBP",
+  "description": "Platform Komuniti, Bakat, Persembahan & Peluang Teater Kolej Profesional MARA Bandar Penawar.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/syncrozz/syncrozz-assets/main/logo/Teater/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

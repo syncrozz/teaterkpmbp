@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@keyframes swipeProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-swipe-progress {
+  animation-name: swipeProgress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}

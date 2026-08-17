@@ -1,0 +1,220 @@
+{
+  "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firestore-blueprint.json",
+  "entities": {
+    "students": {
+      "title": "Students",
+      "description": "Student registrations and interest submissions for Teater KPMBP",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "full_name": { "type": "string" },
+        "student_id": { "type": "string" },
+        "programme": { "type": "string" },
+        "class_name": { "type": "string" },
+        "semester": { "type": "number" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "interests": { "type": "array", "items": { "type": "string" } },
+        "experience_level": { "type": "string" },
+        "motivation": { "type": "string" },
+        "group_status": { "type": "string" },
+        "status": { "type": "string" },
+        "consent": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "assigned_team_id": { "type": "string" },
+        "created_at": { "type": "string" },
+        "updated_at": { "type": "string" }
+      },
+      "required": ["id", "full_name", "student_id", "programme", "created_at"]
+    },
+    "events": {
+      "title": "Events",
+      "description": "Theatre competitions, drama festivals, and major events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "theme": { "type": "string" },
+        "status": { "type": "string" },
+        "date_range": { "type": "string" },
+        "venue": { "type": "string" },
+        "prize_pool": { "type": "string" },
+        "entry_fee": { "type": "string" },
+        "target_audience": { "type": "string" },
+        "highlight_badge": { "type": "string" },
+        "description": { "type": "string" },
+        "theme_color": { "type": "string" },
+        "poster_url": { "type": "string" },
+        "created_at": { "type": "string" },
+        "updated_at": { "type": "string" }
+      },
+      "required": ["id", "title", "status"]
+    },
+    "teams": {
+      "title": "Teams",
+      "description": "Formed theatre production teams and group rosters",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "event_id": { "type": "string" },
+        "name": { "type": "string" },
+        "group_code": { "type": "string" },
+        "status": { "type": "string" },
+        "members": { "type": "array" },
+        "checklist": { "type": "object" },
+        "max_members": { "type": "number" },
+        "captain_name": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "event_id", "name"]
+    },
+    "team_preferences": {
+      "title": "TeamPreferences",
+      "description": "Poll submissions from students expressing preferred group and role",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "event_id": { "type": "string" },
+        "student_id": { "type": "string" },
+        "student_name": { "type": "string" },
+        "preferred_team_group": { "type": "string" },
+        "preferred_role": { "type": "string" },
+        "status": { "type": "string" },
+        "created_at": { "type": "string" },
+        "updated_at": { "type": "string" }
+      },
+      "required": ["id", "event_id", "student_id", "student_name"]
+    },
+    "announcements": {
+      "title": "Announcements",
+      "description": "Important club announcements, briefing dates, and callouts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "priority": { "type": "string" },
+        "category": { "type": "string" },
+        "author": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "title", "content"]
+    },
+    "opportunities": {
+      "title": "Opportunities",
+      "description": "Auditions, crew callouts, and volunteer opportunities",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "role": { "type": "string" },
+        "production": { "type": "string" },
+        "type": { "type": "string" },
+        "deadline": { "type": "string" },
+        "spots_open": { "type": "number" },
+        "description": { "type": "string" },
+        "requirements": { "type": "array" },
+        "status": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "title", "role"]
+    },
+    "skills": {
+      "title": "Skills",
+      "description": "Skill modules and training guides for acting and production",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "level": { "type": "string" },
+        "duration": { "type": "string" },
+        "summary": { "type": "string" },
+        "key_takeaways": { "type": "array" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "title", "category"]
+    },
+    "sir_notes": {
+      "title": "SirNotes",
+      "description": "Director & mentor tips, masterclass reflections, and guidelines",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "quote": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "author": { "type": "string" },
+        "author_role": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "title", "content"]
+    },
+    "archives": {
+      "title": "Archives",
+      "description": "Past productions, accolades, and play synopses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "year": { "type": "string" },
+        "category": { "type": "string" },
+        "director": { "type": "string" },
+        "cast_count": { "type": "number" },
+        "venue": { "type": "string" },
+        "awards": { "type": "array" },
+        "description": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "title", "year"]
+    },
+    "bts": {
+      "title": "BTS",
+      "description": "Behind-the-scenes memories and rehearsal logs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "caption": { "type": "string" },
+        "tag": { "type": "string" },
+        "year": { "type": "string" },
+        "image_url": { "type": "string" }
+      },
+      "required": ["id", "title"]
+    },
+    "talents": {
+      "title": "Talents",
+      "description": "Featured alumni and current theatre performers & crew profiles",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "primary_role": { "type": "string" },
+        "batch": { "type": "string" },
+        "bio": { "type": "string" },
+        "skills": { "type": "array" },
+        "achievements": { "type": "array" },
+        "status": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "name", "primary_role"]
+    },
+    "calendar": {
+      "title": "Calendar",
+      "description": "Theatre rehearsal, workshop, and performance schedules",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "location": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "title", "date", "time"]
+    }
+  }
+}
