@@ -94,7 +94,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdminLogin }) 
             <ul className="space-y-2 text-xs">
               <li>
                 <button onClick={() => onNavigate('skills')} className="hover:text-amber-400 transition-colors uppercase tracking-wider text-[11px]">
-                  Skills Academy (Belajar)
+                  Tips & Trick
                 </button>
               </li>
               <li>

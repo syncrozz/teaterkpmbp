@@ -3,6 +3,7 @@ import { storage } from '../lib/storage';
 import { Team, TeamPreference, TheatreEvent } from '../types';
 import { TeamReadinessCard } from '../components/TeamReadinessCard';
 import { WhatsAppCommunityCard } from '../components/WhatsAppCommunityCard';
+import { formatLiveName, maskStudentId } from '../lib/validation';
 import { 
   Users, 
   Sparkles, 
@@ -271,10 +272,10 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
                 <input
                   type="text"
                   required
-                  placeholder="cth: Muhammad Danial"
+                  placeholder="cth: MUHAMMAD DANIAL"
                   value={pollStudentName}
-                  onChange={e => setPollStudentName(e.target.value)}
-                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
+                  onChange={e => setPollStudentName(formatLiveName(e.target.value))}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 uppercase"
                 />
               </div>
               <div className="space-y-1.5">
@@ -282,10 +283,10 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
                 <input
                   type="text"
                   required
-                  placeholder="cth: DIT23014"
+                  placeholder="cth: PDA-2502-011"
                   value={pollStudentId}
-                  onChange={e => setPollStudentId(e.target.value)}
-                  className="w-full uppercase bg-neutral-950 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
+                  onChange={e => setPollStudentId(maskStudentId(e.target.value))}
+                  className="w-full uppercase bg-neutral-950 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono"
                 />
               </div>
               <div className="space-y-1.5">

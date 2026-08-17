@@ -50,7 +50,7 @@ export const SirCorner: React.FC = () => {
               BIMBINGAN, NOTA & PETUA PENTAS
             </div>
             <h1 className="text-3xl sm:text-4xl font-black uppercase text-white tracking-tight">
-              Sir's Corner
+              SIR'S CORNER
             </h1>
             <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
               Ruang panduan artistik daripada Penasihat Teater KPMBP. Peranan Sir adalah sebagai <strong>coach, fasilitator, dan mentor</strong> — membimbing anda mencari suara, keyakinan, dan estetika pentas anda sendiri.

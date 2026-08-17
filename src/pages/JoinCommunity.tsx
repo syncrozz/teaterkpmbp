@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 import { storage } from '../lib/storage';
 import { StudentExperience, GroupStatus } from '../types';
-import { validateFullName, validateStudentId, validateEmail, normalizePhone } from '../lib/validation';
+import { 
+  formatLiveName, 
+  normalizeFullName, 
+  validateFullName, 
+  maskStudentId, 
+  validateStudentId, 
+  maskICNumber, 
+  validateICNumber, 
+  maskPhoneNumber, 
+  validatePhone, 
+  normalizePhone, 
+  validateEmail 
+} from '../lib/validation';
 import confetti from 'canvas-confetti';
 import { 
   Sparkles, 
@@ -16,7 +28,9 @@ import {
   BookOpen, 
   GraduationCap,
   MessageCircle,
-  HelpCircle
+  HelpCircle,
+  CreditCard,
+  Check
 } from 'lucide-react';
 
 const INTEREST_OPTIONS = [
@@ -39,11 +53,8 @@ const INTEREST_OPTIONS = [
 ];
 
 const PROGRAMMES = [
-  'Diploma in Information Technology (DIT)',
+  'Diploma in Logistic (DLM)',
   'Diploma in Accounting (DIA)',
-  'Diploma in Business Studies (DBS)',
-  'Diploma in International Business (DIB)',
-  'Diploma in English for Business Communication (DEB)',
   'Lain-lain Program KPMBP'
 ];
 
@@ -68,6 +79,7 @@ interface JoinCommunityProps {
 export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate }) => {
   const [fullName, setFullName] = useState('');
   const [studentId, setStudentId] = useState('');
+  const [icNumber, setIcNumber] = useState('');
   const [programme, setProgramme] = useState(PROGRAMMES[0]);
   const [className, setClassName] = useState('');
   const [semester, setSemester] = useState<number>(1);
@@ -83,6 +95,12 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
   const [formError, setFormError] = useState<string | null>(null);
   const [submittedStudent, setSubmittedStudent] = useState<{ name: string; id: string; studentId: string } | null>(null);
 
+  // Live pattern checks for instant feedback
+  const isStudentIdPatternValid = /^[A-Z]{3}-[0-9]{4}-[0-9]{3}$/.test(studentId.trim());
+  const isIcPatternValid = /^[0-9]{6}-[0-9]{2}-[0-9]{4}$/.test(icNumber.trim());
+  const isPhonePatternValid = /^(?:\+?601[0-9]-[0-9]{7,8}|01[0-9]-[0-9]{7,8})$/.test(phone.trim()) || phone.replace(/\D/g, '').length >= 10;
+  const isFullNameValid = fullName.trim().length >= 3;
+
   const toggleInterest = (interest: string) => {
     if (selectedInterests.includes(interest)) {
       setSelectedInterests(selectedInterests.filter(i => i !== interest));
@@ -95,17 +113,25 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
     e.preventDefault();
     setFormError(null);
 
-    // 1. Validation
+    // 1. Validation according to user's strict rules
     const nameCheck = validateFullName(fullName);
     if (!nameCheck.isValid) {
-      setFormError(nameCheck.message || 'Sila masukkan nama penuh yang sah.');
+      setFormError(nameCheck.message || 'Sila masukkan nama penuh yang sah (cth: NUR AINA BATRISYIA BINTI ZULHILMI).');
       return;
     }
 
     const idCheck = validateStudentId(studentId);
     if (!idCheck.isValid) {
-      setFormError(idCheck.message || 'Sila semak semula ID Pelajar anda.');
+      setFormError(idCheck.message || 'Format ID Pelajar tidak sah. Sila gunakan format XXX-XXXX-XXX (cth: PDA-2502-011).');
       return;
+    }
+
+    if (icNumber.trim()) {
+      const icCheck = validateICNumber(icNumber);
+      if (!icCheck.isValid) {
+        setFormError(icCheck.message || 'Format No. Isi tidak sah. Sila gunakan format XXXXXX-XX-XXXX (cth: 861115-46-5305).');
+        return;
+      }
     }
 
     if (!className.trim()) {
@@ -113,9 +139,9 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
       return;
     }
 
-    const normalizedP = normalizePhone(phone);
-    if (!normalizedP || normalizedP.length < 9) {
-      setFormError('Sila masukkan nombor telefon yang sah (cth: 0123456789).');
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.isValid) {
+      setFormError(phoneCheck.message || 'Format No. Telefon tidak sah. Sila gunakan nombor telefon yang sah (cth: 014-5313756 atau 6014-5313756).');
       return;
     }
 
@@ -136,14 +162,15 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
 
     setLoading(true);
 
-    // Call storage register
+    // Call storage register with normalized values
     const result = storage.registerStudent({
       full_name: nameCheck.cleaned,
       student_id: studentId.trim().toUpperCase(),
+      ic_number: icNumber.trim() ? maskICNumber(icNumber) : undefined,
       programme,
       class_name: className.trim().toUpperCase(),
       semester: Number(semester),
-      phone: normalizedP,
+      phone: phone.trim(),
       email: email.trim().toLowerCase(),
       interests: selectedInterests,
       experience_level: experienceLevel,
@@ -184,6 +211,7 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
     setSubmittedStudent(null);
     setFullName('');
     setStudentId('');
+    setIcNumber('');
     setClassName('');
     setPhone('');
     setEmail('');
@@ -304,14 +332,21 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                 <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
                   Nama Penuh Pelajar <span className="text-red-400">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  placeholder="cth: Muhammad Amirul Hafiz Bin Razak"
-                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 transition-all"
-                />
+                <div className="relative">
+                  <User className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3" />
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={e => setFullName(formatLiveName(e.target.value))}
+                    onBlur={() => setFullName(prev => normalizeFullName(prev))}
+                    placeholder="cth: NUR AINA BATRISYIA BINTI ZULHILMI"
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 transition-all uppercase"
+                  />
+                  {isFullNameValid && (
+                    <Check className="w-4 h-4 text-emerald-400 absolute right-3.5 top-3" />
+                  )}
+                </div>
               </div>
 
               {/* ID Pelajar */}
@@ -319,14 +354,41 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                 <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
                   ID Pelajar (Student ID) <span className="text-red-400">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={studentId}
-                  onChange={e => setStudentId(e.target.value)}
-                  placeholder="cth: DIT23014 / DIA24009"
-                  className="w-full uppercase bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono transition-all"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={studentId}
+                    onChange={e => setStudentId(maskStudentId(e.target.value))}
+                    placeholder="cth: PDA-2502-011"
+                    maxLength={12}
+                    className="w-full uppercase bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono transition-all pr-10"
+                  />
+                  {isStudentIdPatternValid && (
+                    <Check className="w-4 h-4 text-emerald-400 absolute right-3.5 top-3" />
+                  )}
+                </div>
+              </div>
+
+              {/* No. Kad Pengenalan / No. Isi */}
+              <div>
+                <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
+                  No. Kad Pengenalan / No. Isi
+                </label>
+                <div className="relative">
+                  <CreditCard className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3" />
+                  <input
+                    type="text"
+                    value={icNumber}
+                    onChange={e => setIcNumber(maskICNumber(e.target.value))}
+                    placeholder="cth: 861115-46-5305"
+                    maxLength={14}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono transition-all"
+                  />
+                  {icNumber.trim().length > 0 && isIcPatternValid && (
+                    <Check className="w-4 h-4 text-emerald-400 absolute right-3.5 top-3" />
+                  )}
+                </div>
               </div>
 
               {/* Program */}
@@ -354,8 +416,8 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                   type="text"
                   required
                   value={className}
-                  onChange={e => setClassName(e.target.value)}
-                  placeholder="cth: DIT 4A / DIA 2B"
+                  onChange={e => setClassName(e.target.value.toUpperCase())}
+                  placeholder="cth: DIA2B"
                   className="w-full uppercase bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono transition-all"
                 />
               </div>
@@ -387,16 +449,18 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                     type="tel"
                     required
                     value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    placeholder="cth: 0123456789"
-                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono transition-all"
+                    onChange={e => setPhone(maskPhoneNumber(e.target.value))}
+                    placeholder="cth: 014-5313756"
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono transition-all"
                   />
+                  {isPhonePatternValid && (
+                    <Check className="w-4 h-4 text-emerald-400 absolute right-3.5 top-3" />
+                  )}
                 </div>
-                <p className="text-[10px] font-mono text-neutral-500 mt-1">Penganjur akan menghubungi anda melalui nombor ini.</p>
               </div>
 
               {/* Email */}
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
                   Emel Pelajar (Student Email) <span className="text-red-400">*</span>
                 </label>
@@ -407,7 +471,7 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                     required
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="cth: nama@student.kpmbp.edu.my"
+                    placeholder="cth: nama@bpenawar.kpm.edu.my"
                     className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono transition-all"
                   />
                 </div>

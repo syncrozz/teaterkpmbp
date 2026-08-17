@@ -52,7 +52,7 @@ export const SkillsAcademy: React.FC = () => {
               PERPUSTAKAAN ILMU & BENGKEL TEATER
             </div>
             <h1 className="text-3xl sm:text-4xl font-black uppercase text-white tracking-tight">
-              Skills Academy
+              TIPS & TRICK
             </h1>
             <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
               Tingkatkan ilmu teori dan praktikal pentas merangkumi lakonan watak, penulisan skrip dramatik, pembahagian ruang blocking, rekaan props, pencahayaan, dan pengurusan pentas profesional.

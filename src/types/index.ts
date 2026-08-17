@@ -9,6 +9,7 @@ export interface Student {
   id: string;
   full_name: string;
   student_id: string;
+  ic_number?: string;
   programme: string;
   class_name: string;
   semester: number;
