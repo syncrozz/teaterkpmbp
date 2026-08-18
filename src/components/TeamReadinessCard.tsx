@@ -119,20 +119,23 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
         <div className="space-y-1.5 mb-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Ahli Kumpulan:</p>
           <div className="space-y-1">
-            {team.members.map((member, idx) => (
-              <div key={idx} className="flex items-center justify-between text-xs bg-neutral-950/60 px-3 py-1.5 rounded-xl border border-white/5">
-                <div className="flex items-center gap-1.5 truncate">
-                  {member.is_captain && <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />}
-                  <span className="text-white font-medium truncate">{member.student_name}</span>
-                  {member.student_nickname && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
-                      {member.student_nickname}
-                    </span>
-                  )}
+            {team.members.map((member, idx) => {
+              const displayName = member.student_nickname?.trim() ? member.student_nickname.trim() : member.student_name;
+              return (
+                <div key={idx} className="flex items-center justify-between text-xs bg-neutral-950/60 px-3 py-1.5 rounded-xl border border-white/5">
+                  <div className="flex items-center gap-1.5 truncate">
+                    {member.is_captain && <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />}
+                    <span className="text-white font-bold truncate">{displayName}</span>
+                    {member.student_nickname && member.student_nickname.trim() !== member.student_name && (
+                      <span className="text-[10px] text-neutral-500 truncate hidden sm:inline">
+                        ({member.student_name})
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-amber-400 font-mono font-medium">{member.role}</span>
                 </div>
-                <span className="text-[10px] text-neutral-400 font-mono">{member.role}</span>
-              </div>
-            ))}
+              );
+            })}
             {team.members.length === 0 && (
               <p className="text-xs text-neutral-500 italic py-1">Belum ada ahli berdaftar.</p>
             )}

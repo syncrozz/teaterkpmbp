@@ -742,6 +742,92 @@ class StorageManager {
     return true;
   }
 
+  public updateTeamMemberRole(teamId: string, memberIdOrStudentId: string, newRole: string): boolean {
+    const teamIndex = this.store.teams.findIndex(t => t.id === teamId);
+    if (teamIndex < 0) return false;
+
+    const team = this.store.teams[teamIndex];
+    let memberUpdated = false;
+    const isCaptainRole = newRole.toLowerCase().includes('ketua') || newRole.toLowerCase().includes('pengarah');
+
+    const updatedMembers = team.members.map(m => {
+      if (m.id === memberIdOrStudentId || m.student_id === memberIdOrStudentId) {
+        memberUpdated = true;
+        return {
+          ...m,
+          role: newRole,
+          is_captain: isCaptainRole
+        };
+      }
+      return m;
+    });
+
+    if (!memberUpdated) return false;
+
+    const hasCaptain = updatedMembers.some(m => m.is_captain) || Boolean(team.captain_name);
+    const updatedTeam: Team = {
+      ...team,
+      members: updatedMembers,
+      checklist: {
+        ...team.checklist,
+        has_captain: hasCaptain,
+        has_character_split: updatedMembers.some(m => m.role.toLowerCase().includes('pelakon')),
+        has_script: updatedMembers.some(m => m.role.toLowerCase().includes('skrip')),
+        has_props: updatedMembers.some(m => m.role.toLowerCase().includes('props') || m.role.toLowerCase().includes('artistik')),
+        has_costume: updatedMembers.some(m => m.role.toLowerCase().includes('kostum')),
+        has_technical_req: updatedMembers.some(m => m.role.toLowerCase().includes('teknikal') || m.role.toLowerCase().includes('stage manager'))
+      }
+    };
+
+    const updatedTeams = [...this.store.teams];
+    updatedTeams[teamIndex] = updatedTeam;
+    this.saveLocal({ ...this.store, teams: updatedTeams });
+    this.syncDocToFirestore('teams', updatedTeam.id, updatedTeam);
+    return true;
+  }
+
+  public removeMemberFromTeam(teamId: string, memberIdOrStudentId: string): boolean {
+    const teamIndex = this.store.teams.findIndex(t => t.id === teamId);
+    if (teamIndex < 0) return false;
+
+    const team = this.store.teams[teamIndex];
+    const targetMember = team.members.find(m => m.id === memberIdOrStudentId || m.student_id === memberIdOrStudentId);
+    if (!targetMember) return false;
+
+    const updatedMembers = team.members.filter(m => m.id !== memberIdOrStudentId && m.student_id !== memberIdOrStudentId);
+    const updatedTeam: Team = {
+      ...team,
+      members: updatedMembers,
+      checklist: {
+        ...team.checklist,
+        has_five_members: updatedMembers.length >= 5,
+        has_captain: updatedMembers.some(m => m.is_captain) || Boolean(team.captain_name)
+      }
+    };
+
+    const updatedTeams = [...this.store.teams];
+    updatedTeams[teamIndex] = updatedTeam;
+
+    // Reset student assigned_team_id
+    const updatedStudents = this.store.students.map(s => {
+      if (s.student_id === targetMember.student_id || s.full_name === targetMember.student_name) {
+        const unassigned: Student = {
+          ...s,
+          assigned_team_id: undefined,
+          group_status: 'Saya mahu mencari kumpulan',
+          updated_at: new Date().toISOString()
+        };
+        this.syncDocToFirestore('students', s.id, unassigned);
+        return unassigned;
+      }
+      return s;
+    });
+
+    this.saveLocal({ ...this.store, teams: updatedTeams, students: updatedStudents });
+    this.syncDocToFirestore('teams', updatedTeam.id, updatedTeam);
+    return true;
+  }
+
   // --- TEAM PREFERENCES (Poll Exploration) ---
   public getTeamPreferences(eventId?: string): TeamPreference[] {
     if (eventId) {

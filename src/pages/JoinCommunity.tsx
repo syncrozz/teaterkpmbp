@@ -378,18 +378,13 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                 </div>
               </div>
 
-              {/* Nama Panggilan (Title Case Auto) */}
-              <div className="sm:col-span-2 bg-neutral-950/60 border border-amber-500/20 rounded-2xl p-3.5 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-mono uppercase text-amber-400 font-bold">
-                    Nama Panggilan (Short Name) <span className="text-amber-400">*</span>
-                  </label>
-                  <span className="text-[10px] text-neutral-400 font-mono">
-                    Automatik Title Case (cth: Aina)
-                  </span>
-                </div>
+              {/* Nama Panggilan */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
+                  Nama Panggilan <span className="text-red-400">*</span>
+                </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-amber-500/60 absolute left-3.5 top-3" />
+                  <User className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3" />
                   <input
                     type="text"
                     value={nickname}
@@ -403,15 +398,12 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                       }
                     }}
                     placeholder="cth: Aina"
-                    className="w-full bg-neutral-900 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-xs text-amber-300 font-bold placeholder-neutral-500 focus:outline-none focus:border-amber-500 transition-all"
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 transition-all"
                   />
                   {nickname.trim().length >= 2 && (
                     <Check className="w-4 h-4 text-emerald-400 absolute right-3.5 top-3" />
                   )}
                 </div>
-                <p className="text-[11px] text-neutral-400 leading-normal">
-                  💡 Memudahkan penasihat & penganjur mengenali anda secara pantas untuk watak/peranan tanpa kekeliruan nama panjang.
-                </p>
               </div>
 
               {/* ID Pelajar */}

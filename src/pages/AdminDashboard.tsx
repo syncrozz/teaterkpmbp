@@ -48,6 +48,20 @@ import {
 import { SUPABASE_POSTGRES_SCHEMA } from '../lib/sqlSchema';
 import { extractSuggestedNickname } from '../lib/validation';
 
+export const THEATRE_ROLES = [
+  'Ketua / Pengarah',
+  'Penulis Skrip',
+  'Penolong Pengarah',
+  'Pengurus Produksi',
+  'Pelakon',
+  'Stage Manager / Pengurus Pentas',
+  'Penata Artistik / Set',
+  'Props Master',
+  'Kostum & Solekan',
+  'Teknikal',
+  'Publisiti & Dokumentasi'
+];
+
 export const AdminDashboard: React.FC = () => {
   // Admin Authentication Gate state
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -1098,16 +1112,75 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1.5 pt-2 border-t border-white/5 text-xs text-neutral-300">
-                  <p className="font-mono uppercase text-[10px] text-neutral-400">Ahli Kumpulan ({team.members.length}/{team.max_members}):</p>
-                  {team.members.map((m, idx) => (
-                    <div key={idx} className="flex justify-between items-center bg-neutral-950 p-2.5 rounded-2xl border border-white/5">
-                      <span className="font-medium text-white">{m.student_name}</span>
-                      <span className="text-[10px] text-amber-400 font-mono">{m.role}</span>
-                    </div>
-                  ))}
+                <div className="space-y-2 pt-2 border-t border-white/5 text-xs text-neutral-300">
+                  <div className="flex items-center justify-between">
+                    <p className="font-mono uppercase text-[10px] text-neutral-400">
+                      Ahli Kumpulan ({team.members.length}/{team.max_members}):
+                    </p>
+                    <span className="text-[10px] text-amber-400/80 font-mono">
+                      Peranan boleh diset oleh Admin
+                    </span>
+                  </div>
+
+                  {team.members.map((m, idx) => {
+                    const displayName = m.student_nickname?.trim() ? m.student_nickname.trim() : m.student_name;
+                    return (
+                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-neutral-950 p-3 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {m.is_captain && <Crown className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />}
+                          <span className="font-bold text-white text-xs truncate">
+                            {displayName}
+                          </span>
+                          {m.student_nickname && m.student_nickname.trim() !== m.student_name && (
+                            <span className="text-[10px] text-neutral-500 truncate hidden md:inline">
+                              ({m.student_name})
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Dropdown Pilihan Peranan Teater (11 Pilihan Rasmi) */}
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <select
+                            value={m.role}
+                            onChange={e => {
+                              storage.updateTeamMemberRole(team.id, m.id, e.target.value);
+                              refreshAll();
+                            }}
+                            className="bg-neutral-900 hover:bg-neutral-850 text-amber-400 font-mono font-bold text-[11px] px-3 py-1.5 rounded-xl border border-amber-500/30 focus:border-amber-500 focus:outline-none cursor-pointer transition-all w-full sm:w-auto"
+                          >
+                            {THEATRE_ROLES.map((roleOpt, rIdx) => (
+                              <option key={rIdx} value={roleOpt} className="bg-neutral-950 text-white font-sans">
+                                {rIdx + 1}. {roleOpt}
+                              </option>
+                            ))}
+                            {!THEATRE_ROLES.includes(m.role) && (
+                              <option value={m.role} className="bg-neutral-950 text-neutral-300 font-sans">
+                                {m.role} (Khas)
+                              </option>
+                            )}
+                          </select>
+
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Keluarkan ${displayName} daripada kumpulan ${team.name}?`)) {
+                                storage.removeMemberFromTeam(team.id, m.id);
+                                refreshAll();
+                              }
+                            }}
+                            className="p-1.5 rounded-xl bg-neutral-900 hover:bg-red-950 text-neutral-400 hover:text-red-400 border border-white/5 hover:border-red-500/30 transition-colors"
+                            title="Keluarkan Ahli"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
                   {team.members.length === 0 && (
-                    <p className="text-neutral-500 italic text-[11px]">Belum ada ahli didaftarkan.</p>
+                    <p className="text-neutral-500 italic text-[11px] py-2 text-center bg-neutral-950/40 rounded-2xl border border-dashed border-white/5">
+                      Belum ada ahli didaftarkan ke dalam kumpulan ini.
+                    </p>
                   )}
                 </div>
 
