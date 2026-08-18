@@ -96,10 +96,31 @@ export const AdminDashboard: React.FC = () => {
   const [csvImportResult, setCsvImportResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [csvImportError, setCsvImportError] = useState<string | null>(null);
 
-  // Student Delete Modal with PIN Verification
-  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
-  const [deletePinInput, setDeletePinInput] = useState('');
-  const [deletePinError, setDeletePinError] = useState<string | null>(null);
+  // Student Selection state for Bulk Actions
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+
+  // Single Student Delete Modal (Confirmation popup without PIN)
+  const [studentToDeleteSingle, setStudentToDeleteSingle] = useState<Student | null>(null);
+
+  // Bulk Students Delete Modal (Requires 4-Digit PIN)
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [bulkDeletePinInput, setBulkDeletePinInput] = useState('');
+  const [bulkDeletePinError, setBulkDeletePinError] = useState<string | null>(null);
+
+  // Team Create Modal State
+  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamCode, setNewTeamCode] = useState('');
+  const [newTeamPlayTitle, setNewTeamPlayTitle] = useState('');
+  const [newTeamCaptainName, setNewTeamCaptainName] = useState('');
+  const [newTeamMaxMembers, setNewTeamMaxMembers] = useState(7);
+  const [newTeamStatus, setNewTeamStatus] = useState<TeamStatus>('FORMING');
+  const [newTeamEventId, setNewTeamEventId] = useState('');
+
+  // Team Delete Modal State (for Inactive/Graduated Teams)
+  const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+  const [teamDeletePinInput, setTeamDeletePinInput] = useState('');
+  const [teamDeletePinError, setTeamDeletePinError] = useState<string | null>(null);
 
   const [firebaseSyncing, setFirebaseSyncing] = useState(false);
   const [firebaseSyncMsg, setFirebaseSyncMsg] = useState<string | null>(null);
@@ -160,26 +181,128 @@ export const AdminDashboard: React.FC = () => {
     refreshAll();
   };
 
-  // Student Delete with 4-digit PIN verification
-  const handleOpenDeleteStudent = (std: Student) => {
-    setStudentToDelete(std);
-    setDeletePinInput('');
-    setDeletePinError(null);
+  // Selection handlers for students
+  const handleToggleSelectAll = () => {
+    if (selectedStudentIds.length === filteredStudents.length && filteredStudents.length > 0) {
+      setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(filteredStudents.map(s => s.id));
+    }
   };
 
-  const handleConfirmDeleteStudent = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!studentToDelete) return;
+  const handleToggleSelectStudent = (id: string) => {
+    setSelectedStudentIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
 
-    if (deletePinInput.trim() !== '5313') {
-      setDeletePinError('Kod PIN Keselamatan 4-digit salah. Sila cuba lagi.');
+  // Single Student Delete (Confirmation popup WITHOUT PIN as requested)
+  const handleOpenSingleDelete = (std: Student) => {
+    setStudentToDeleteSingle(std);
+  };
+
+  const handleConfirmSingleDelete = () => {
+    if (!studentToDeleteSingle) return;
+    storage.deleteStudent(studentToDeleteSingle.id);
+    setSelectedStudentIds(prev => prev.filter(id => id !== studentToDeleteSingle.id));
+    setStudentToDeleteSingle(null);
+    refreshAll();
+  };
+
+  // Bulk Students Delete (Requires 4-Digit PIN as requested)
+  const handleOpenBulkDelete = () => {
+    if (selectedStudentIds.length === 0) return;
+    setBulkDeletePinInput('');
+    setBulkDeletePinError(null);
+    setShowBulkDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (bulkDeletePinInput.trim() !== '5313') {
+      setBulkDeletePinError('Kod PIN Keselamatan 4-digit salah. Sila cuba lagi.');
       return;
     }
 
-    storage.deleteStudent(studentToDelete.id);
-    setStudentToDelete(null);
-    setDeletePinInput('');
-    setDeletePinError(null);
+    storage.bulkDeleteStudents(selectedStudentIds);
+    setSelectedStudentIds([]);
+    setShowBulkDeleteModal(false);
+    setBulkDeletePinInput('');
+    setBulkDeletePinError(null);
+    refreshAll();
+  };
+
+  // Team CRUD handlers
+  const handleOpenCreateTeam = () => {
+    const activeEvt = events[0]?.id || '';
+    setNewTeamName('');
+    setNewTeamCode(`TEAM-${teams.length + 1}`);
+    setNewTeamPlayTitle('');
+    setNewTeamCaptainName('');
+    setNewTeamMaxMembers(7);
+    setNewTeamStatus('FORMING');
+    setNewTeamEventId(activeEvt);
+    setShowCreateTeamModal(true);
+  };
+
+  const handleCreateTeamSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTeamName.trim()) return;
+
+    storage.createTeam({
+      name: newTeamName.trim(),
+      code: newTeamCode.trim() || `TEAM-${teams.length + 1}`,
+      play_title: newTeamPlayTitle.trim() || undefined,
+      captain_name: newTeamCaptainName.trim() || undefined,
+      max_members: newTeamMaxMembers || 7,
+      status: newTeamStatus,
+      event_id: newTeamEventId || events[0]?.id || 'event-1',
+      members: newTeamCaptainName.trim() ? [{
+        id: 'tm-' + Date.now(),
+        team_id: '',
+        student_id: 'CAPT-' + Math.floor(1000 + Math.random() * 9000),
+        student_name: newTeamCaptainName.trim(),
+        role: 'Ketua / Pengarah',
+        joined_at: new Date().toISOString().split('T')[0],
+        is_captain: true
+      }] : [],
+      checklist: {
+        has_captain: Boolean(newTeamCaptainName.trim()),
+        has_five_members: false,
+        has_storyline: false,
+        has_character_split: false,
+        has_script: false,
+        has_props: false,
+        has_costume: false,
+        has_technical_req: false,
+        rehearsal_started: false
+      }
+    });
+
+    setShowCreateTeamModal(false);
+    refreshAll();
+  };
+
+  // Delete Team handler (with PIN verification)
+  const handleOpenDeleteTeam = (team: Team) => {
+    setTeamToDelete(team);
+    setTeamDeletePinInput('');
+    setTeamDeletePinError(null);
+  };
+
+  const handleConfirmDeleteTeam = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!teamToDelete) return;
+
+    if (teamDeletePinInput.trim() !== '5313') {
+      setTeamDeletePinError('Kod PIN Keselamatan 4-digit salah. Sila cuba lagi.');
+      return;
+    }
+
+    storage.deleteTeam(teamToDelete.id);
+    setTeamToDelete(null);
+    setTeamDeletePinInput('');
+    setTeamDeletePinError(null);
     refreshAll();
   };
 
@@ -724,6 +847,17 @@ export const AdminDashboard: React.FC = () => {
                 <Upload className="w-3.5 h-3.5" />
                 <span>Import CSV</span>
               </button>
+
+              {selectedStudentIds.length > 0 && (
+                <button
+                  onClick={handleOpenBulkDelete}
+                  className="px-3.5 py-2 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-md shadow-red-950/40"
+                  title="Padam Semua Pelajar Terpilih (Perlu PIN Keselamatan)"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Padam Terpilih ({selectedStudentIds.length})</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -733,6 +867,15 @@ export const AdminDashboard: React.FC = () => {
               <table className="w-full text-left text-xs text-neutral-300">
                 <thead className="bg-neutral-950 text-neutral-400 font-mono font-bold uppercase tracking-wider border-b border-white/5">
                   <tr>
+                    <th className="py-3.5 px-4 text-[10px] w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={filteredStudents.length > 0 && selectedStudentIds.length === filteredStudents.length}
+                        onChange={handleToggleSelectAll}
+                        className="w-4 h-4 rounded border-white/20 bg-neutral-900 text-red-600 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-red-600"
+                        title="Pilih Semua (Select All)"
+                      />
+                    </th>
                     <th className="py-3.5 px-4 text-[10px]">Pelajar & ID</th>
                     <th className="py-3.5 px-4 text-[10px]">Program / Kelas</th>
                     <th className="py-3.5 px-4 text-[10px]">Minat Teater</th>
@@ -744,9 +887,20 @@ export const AdminDashboard: React.FC = () => {
                   {filteredStudents.map(std => {
                     const waLink = generateWhatsAppLink(std.phone, std.full_name, 'PENGESAHAN_PENDAFTARAN');
                     const waGroupInviteLink = generateWhatsAppLink(std.phone, std.full_name, 'JEMPUT_GROUP');
+                    const isSelected = selectedStudentIds.includes(std.id);
 
                     return (
-                      <tr key={std.id} className="hover:bg-white/[0.02] transition-colors">
+                      <tr key={std.id} className={`hover:bg-white/[0.02] transition-colors ${isSelected ? 'bg-red-500/5' : ''}`}>
+                        {/* Checkbox */}
+                        <td className="py-4 px-4 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSelectStudent(std.id)}
+                            className="w-4 h-4 rounded border-white/20 bg-neutral-900 text-red-600 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-red-600"
+                          />
+                        </td>
+
                         {/* Student Name & Contact */}
                         <td className="py-4 px-4 space-y-1">
                           <div className="font-sans font-bold text-white text-sm">{std.full_name}</div>
@@ -853,9 +1007,9 @@ export const AdminDashboard: React.FC = () => {
                             </button>
 
                             <button
-                              onClick={() => handleOpenDeleteStudent(std)}
-                              className="p-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/70 text-red-400 border border-red-500/20 text-[10px] transition-colors"
-                              title="Padam Pelajar (Perlu Kod PIN Keselamatan)"
+                              onClick={() => handleOpenSingleDelete(std)}
+                              className="p-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/70 text-red-400 border border-red-500/20 text-[10px] transition-colors cursor-pointer"
+                              title="Padam Pelajar (Pengesahan Pantas)"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -880,6 +1034,27 @@ export const AdminDashboard: React.FC = () => {
       {/* TAB 2: TEAM MANAGEMENT */}
       {activeTab === 'teams' && (
         <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-black uppercase text-white flex items-center gap-2">
+                <span>Pengurusan Kumpulan Produksi ({teams.length})</span>
+                <span className="bg-amber-500/20 text-amber-400 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                  {teams.filter(t => t.status === 'READY').length} Siap
+                </span>
+              </h2>
+              <p className="text-xs text-neutral-400">
+                Urus kumpulan teater, cipta kumpulan baharu, dan padam kumpulan yang tidak aktif atau tamat belajar.
+              </p>
+            </div>
+            <button
+              onClick={handleOpenCreateTeam}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/20 cursor-pointer transition-all active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Cipta Kumpulan Baru</span>
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {teams.map(team => (
               <div key={team.id} className="bg-neutral-900 border border-white/10 rounded-3xl p-6 space-y-4">
@@ -890,8 +1065,20 @@ export const AdminDashboard: React.FC = () => {
                     </span>
                     <h3 className="text-base font-black uppercase text-white mt-1.5">{team.name}</h3>
                     <p className="text-xs text-neutral-400">Tajuk Lakonan: {team.play_title || 'Belum Ditetapkan'}</p>
+                    {team.captain_name && (
+                      <p className="text-[11px] text-amber-400 font-mono mt-0.5">Ketua: {team.captain_name}</p>
+                    )}
                   </div>
-                  <StatusBadge status={team.status} />
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={team.status} />
+                    <button
+                      onClick={() => handleOpenDeleteTeam(team)}
+                      className="p-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/70 text-red-400 border border-red-500/20 text-xs transition-colors cursor-pointer"
+                      title="Padam Kumpulan Ini (Tidak Aktif / Tamat Belajar)"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5 pt-2 border-t border-white/5 text-xs text-neutral-300">
@@ -920,12 +1107,25 @@ export const AdminDashboard: React.FC = () => {
                     <option value="FORMING">FORMING</option>
                     <option value="READY">READY</option>
                     <option value="LOCKED">LOCKED</option>
-                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="COMPLETED">COMPLETED (Tamat Belajar)</option>
                   </select>
                 </div>
               </div>
             ))}
           </div>
+
+          {teams.length === 0 && (
+            <div className="text-center py-12 bg-neutral-900 border border-white/10 rounded-3xl p-8 space-y-3">
+              <Users className="w-8 h-8 text-neutral-600 mx-auto" />
+              <p className="text-neutral-400 text-xs font-mono">Tiada kumpulan teater didaftarkan.</p>
+              <button
+                onClick={handleOpenCreateTeam}
+                className="px-4 py-2 rounded-2xl bg-amber-500 text-neutral-950 font-bold text-xs uppercase"
+              >
+                Cipta Kumpulan Pertama
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1706,10 +1906,71 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* STUDENT DELETE MODAL WITH 4-DIGIT PIN */}
-      {studentToDelete && (
+      {/* SINGLE STUDENT DELETE CONFIRMATION POPUP (NO PIN REQUIRED AS REQUESTED) */}
+      {studentToDeleteSingle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-          <div className="bg-neutral-900 border border-red-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full text-white space-y-6 shadow-2xl">
+          <div className="bg-neutral-900 border border-white/15 rounded-3xl p-6 sm:p-8 max-w-md w-full text-white space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">
+                    Padam Rekod Pelajar?
+                  </h3>
+                  <p className="text-[11px] text-neutral-400 font-mono">
+                    Pengesahan Pemadaman Individu
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setStudentToDeleteSingle(null)}
+                className="p-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-neutral-950 border border-white/10 p-4 rounded-2xl space-y-1.5 font-mono text-xs">
+              <div className="text-white font-bold text-sm font-sans">{studentToDeleteSingle.full_name}</div>
+              <div className="text-neutral-400 text-[11px]">
+                ID Pelajar: <span className="text-amber-400 font-bold">{studentToDeleteSingle.student_id}</span> • {studentToDeleteSingle.programme} ({studentToDeleteSingle.class_name})
+              </div>
+              <div className="text-neutral-500 text-[11px]">
+                Emel: {studentToDeleteSingle.email} • Tel: {studentToDeleteSingle.phone}
+              </div>
+            </div>
+
+            <p className="text-xs text-neutral-300 leading-relaxed font-sans">
+              Adakah anda pasti untuk memadam rekod pelajar ini daripada sistem? Tindakan ini tidak boleh diundur.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setStudentToDeleteSingle(null)}
+                className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSingleDelete}
+                className="px-6 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-red-950/40 active:scale-95 transition-transform cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Ya, Padam Rekod</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BULK STUDENTS DELETE MODAL (WITH 4-DIGIT PIN AS REQUESTED) */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+          <div className="bg-neutral-900 border border-red-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full text-white space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center">
@@ -1717,18 +1978,18 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-black uppercase text-white">
-                    Padam Rekod Pelajar
+                    Padam Pukal Pelajar ({selectedStudentIds.length})
                   </h3>
                   <p className="text-[11px] text-neutral-400 font-mono">
-                    Pengesahan Keselamatan Pentadbir
+                    Perlu 4-Digit PIN Keselamatan
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => {
-                  setStudentToDelete(null);
-                  setDeletePinInput('');
-                  setDeletePinError(null);
+                  setShowBulkDeleteModal(false);
+                  setBulkDeletePinInput('');
+                  setBulkDeletePinError(null);
                 }}
                 className="p-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
               >
@@ -1736,28 +1997,17 @@ export const AdminDashboard: React.FC = () => {
               </button>
             </div>
 
-            {/* Target Student Details */}
-            <div className="bg-neutral-950 border border-red-500/20 p-4 rounded-2xl space-y-1.5 font-mono text-xs">
-              <div className="text-white font-bold text-sm font-sans">{studentToDelete.full_name}</div>
-              <div className="text-neutral-400 text-[11px]">
-                ID: <span className="text-amber-400 font-bold">{studentToDelete.student_id}</span> • {studentToDelete.programme} ({studentToDelete.class_name})
-              </div>
-              <div className="text-neutral-500 text-[11px]">
-                Emel: {studentToDelete.email} • Tel: {studentToDelete.phone}
-              </div>
-            </div>
-
             <div className="p-3 bg-red-950/40 border border-red-500/30 rounded-2xl text-red-300 text-xs flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <p className="text-[11px] leading-relaxed">
-                Tindakan ini akan memadam rekod pendaftaran pelajar ini daripada simpanan sistem dan <strong>Firestore</strong> secara kekal.
+                Anda memilih untuk memadam sebanyak <strong>{selectedStudentIds.length} rekod pelajar</strong> sekaligus. Tindakan ini memerlukan pengesahan PIN Keselamatan Pentadbir.
               </p>
             </div>
 
-            <form onSubmit={handleConfirmDeleteStudent} className="space-y-4">
+            <form onSubmit={handleConfirmBulkDelete} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-xs font-mono font-bold uppercase text-neutral-300">
-                  Masukkan 4-Digit PIN Keselamatan:
+                  Masukkan 4-Digit PIN Keselamatan (5313):
                 </label>
                 <div className="relative">
                   <Key className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3.5" />
@@ -1767,13 +2017,13 @@ export const AdminDashboard: React.FC = () => {
                     required
                     autoFocus
                     placeholder="••••"
-                    value={deletePinInput}
-                    onChange={e => setDeletePinInput(e.target.value)}
+                    value={bulkDeletePinInput}
+                    onChange={e => setBulkDeletePinInput(e.target.value)}
                     className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-center text-white placeholder-neutral-600 focus:outline-none focus:border-red-500 text-lg tracking-[0.4em] font-mono"
                   />
                 </div>
-                {deletePinError && (
-                  <p className="text-[11px] font-mono text-red-400 mt-1">{deletePinError}</p>
+                {bulkDeletePinError && (
+                  <p className="text-[11px] font-mono text-red-400 mt-1">{bulkDeletePinError}</p>
                 )}
               </div>
 
@@ -1781,9 +2031,255 @@ export const AdminDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setStudentToDelete(null);
-                    setDeletePinInput('');
-                    setDeletePinError(null);
+                    setShowBulkDeleteModal(false);
+                    setBulkDeletePinInput('');
+                    setBulkDeletePinError(null);
+                  }}
+                  className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-red-950/40 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Sahkan Padam ({selectedStudentIds.length})</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE TEAM MODAL */}
+      {showCreateTeamModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-neutral-900 border border-white/15 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-white space-y-6 shadow-2xl my-8">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">
+                    Cipta Kumpulan Baru
+                  </h3>
+                  <p className="text-[11px] text-neutral-400 font-mono">
+                    Pendaftaran Kumpulan Produksi Teater
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCreateTeamModal(false)}
+                className="p-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTeamSubmit} className="space-y-4 font-mono text-xs">
+              <div className="space-y-1">
+                <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                  Nama Kumpulan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Kumpulan Mahsuri 2.0"
+                  value={newTeamName}
+                  onChange={e => setNewTeamName(e.target.value)}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    Kod Kumpulan
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: TEAM-01"
+                    value={newTeamCode}
+                    onChange={e => setNewTeamCode(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500 uppercase"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    Kapasiti Maksimum
+                  </label>
+                  <input
+                    type="number"
+                    min={3}
+                    max={20}
+                    value={newTeamMaxMembers}
+                    onChange={e => setNewTeamMaxMembers(parseInt(e.target.value) || 7)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                  Tajuk Skrip / Pementasan
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Menanti Di Gerbang Senja"
+                  value={newTeamPlayTitle}
+                  onChange={e => setNewTeamPlayTitle(e.target.value)}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                  Nama Ketua / Pengarah (Pilihan)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nama penuh ketua kumpulan..."
+                  value={newTeamCaptainName}
+                  onChange={e => setNewTeamCaptainName(e.target.value)}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    Status Kumpulan
+                  </label>
+                  <select
+                    value={newTeamStatus}
+                    onChange={e => setNewTeamStatus(e.target.value as TeamStatus)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="FORMING">FORMING (Sedang Membentuk)</option>
+                    <option value="READY">READY (Sedia)</option>
+                    <option value="LOCKED">LOCKED (Terkunci)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    Acara Teater
+                  </label>
+                  <select
+                    value={newTeamEventId}
+                    onChange={e => setNewTeamEventId(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                  >
+                    {events.map(ev => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateTeamModal(false)}
+                  className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Daftar Kumpulan</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE TEAM MODAL (WITH 4-DIGIT PIN) */}
+      {teamToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+          <div className="bg-neutral-900 border border-red-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full text-white space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">
+                    Padam Kumpulan
+                  </h3>
+                  <p className="text-[11px] text-neutral-400 font-mono">
+                    Tamat Belajar / Tidak Aktif
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setTeamToDelete(null);
+                  setTeamDeletePinInput('');
+                  setTeamDeletePinError(null);
+                }}
+                className="p-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="bg-neutral-950 border border-red-500/20 p-4 rounded-2xl space-y-1.5 font-mono text-xs">
+              <div className="text-white font-bold text-sm font-sans">{teamToDelete.name} ({teamToDelete.code})</div>
+              <div className="text-neutral-400 text-[11px]">
+                Tajuk: {teamToDelete.play_title || 'Belum ditetapkan'}
+              </div>
+              <div className="text-neutral-500 text-[11px]">
+                Bilangan Ahli: {teamToDelete.members.length} Orang • Status: {teamToDelete.status}
+              </div>
+            </div>
+
+            <div className="p-3 bg-red-950/40 border border-red-500/30 rounded-2xl text-red-300 text-xs flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed">
+                Tindakan ini akan memadam rekod kumpulan ini daripada sistem dan <strong>Firestore</strong> secara kekal.
+              </p>
+            </div>
+
+            <form onSubmit={handleConfirmDeleteTeam} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-mono font-bold uppercase text-neutral-300">
+                  Masukkan 4-Digit PIN Keselamatan (5313):
+                </label>
+                <div className="relative">
+                  <Key className="w-4 h-4 text-neutral-500 absolute left-3.5 top-3.5" />
+                  <input
+                    type="password"
+                    maxLength={4}
+                    required
+                    autoFocus
+                    placeholder="••••"
+                    value={teamDeletePinInput}
+                    onChange={e => setTeamDeletePinInput(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-center text-white placeholder-neutral-600 focus:outline-none focus:border-red-500 text-lg tracking-[0.4em] font-mono"
+                  />
+                </div>
+                {teamDeletePinError && (
+                  <p className="text-[11px] font-mono text-red-400 mt-1">{teamDeletePinError}</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTeamToDelete(null);
+                    setTeamDeletePinInput('');
+                    setTeamDeletePinError(null);
                   }}
                   className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5 cursor-pointer"
                 >

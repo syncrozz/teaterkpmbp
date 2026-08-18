@@ -408,6 +408,16 @@ class StorageManager {
     return true;
   }
 
+  public bulkDeleteStudents(studentIds: string[]): number {
+    const idSet = new Set(studentIds);
+    const students = this.store.students.filter(s => !idSet.has(s.id));
+    this.saveLocal({ ...this.store, students });
+    studentIds.forEach(id => {
+      this.syncDeleteFromFirestore('students', id);
+    });
+    return studentIds.length;
+  }
+
   public bulkImportStudents(studentsList: Omit<Student, 'id' | 'status' | 'created_at' | 'updated_at'>[]): {
     importedCount: number;
     skippedCount: number;
@@ -636,6 +646,13 @@ class StorageManager {
     if (targetTeam) {
       this.syncDocToFirestore('teams', teamId, targetTeam);
     }
+    return true;
+  }
+
+  public deleteTeam(teamId: string): boolean {
+    const teams = this.store.teams.filter(t => t.id !== teamId);
+    this.saveLocal({ ...this.store, teams });
+    this.syncDeleteFromFirestore('teams', teamId);
     return true;
   }
 
