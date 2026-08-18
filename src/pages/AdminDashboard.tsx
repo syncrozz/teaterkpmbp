@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { storage } from '../lib/storage';
 import { 
   Student, 
@@ -71,6 +71,17 @@ export const AdminDashboard: React.FC = () => {
   });
   const [adminPin, setAdminPin] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
+  const pinInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto focus PIN input when login screen is displayed
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const timer = setTimeout(() => {
+        pinInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
   // Tabs
   const [activeTab, setActiveTab] = useState<'students' | 'teams' | 'events' | 'opportunities' | 'announcements' | 'sirnotes' | 'database'>('students');
@@ -631,7 +642,15 @@ export const AdminDashboard: React.FC = () => {
 
   // Filtered students list
   const filteredStudents = students.filter(s => {
-    const matchesStatus = statusFilter === 'ALL' || s.status === statusFilter;
+    const isPending = s.status === 'PENDING' || s.status === 'PENDING_REVIEW';
+    const isContacted = s.status === 'CONTACTED' || s.status === 'INVITED';
+    const isJoined = s.status === 'JOINED' || s.status === 'JOINED_COMMUNITY';
+    
+    let matchesStatus = statusFilter === 'ALL' || s.status === statusFilter;
+    if (statusFilter === 'PENDING_REVIEW') matchesStatus = isPending;
+    if (statusFilter === 'CONTACTED') matchesStatus = isContacted;
+    if (statusFilter === 'JOINED_COMMUNITY') matchesStatus = isJoined;
+
     const matchesProg = programmeFilter === 'ALL' || s.programme.includes(programmeFilter);
     const matchesSearch = 
       s.full_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
@@ -643,9 +662,9 @@ export const AdminDashboard: React.FC = () => {
 
   // Calculate high-level stats
   const totalStudents = students.length;
-  const pendingCount = students.filter(s => s.status === 'PENDING_REVIEW').length;
-  const contactedCount = students.filter(s => s.status === 'CONTACTED').length;
-  const joinedCount = students.filter(s => s.status === 'JOINED_COMMUNITY').length;
+  const pendingCount = students.filter(s => s.status === 'PENDING_REVIEW' || s.status === 'PENDING').length;
+  const contactedCount = students.filter(s => s.status === 'CONTACTED' || s.status === 'INVITED').length;
+  const joinedCount = students.filter(s => s.status === 'JOINED_COMMUNITY' || s.status === 'JOINED').length;
   const totalTeams = teams.length;
   const readyTeamsCount = teams.filter(t => t.status === 'READY' || t.status === 'LOCKED').length;
 
@@ -659,10 +678,10 @@ export const AdminDashboard: React.FC = () => {
 
           <div className="space-y-2">
             <h1 className="text-2xl font-black uppercase text-white">
-              Pusat Kawalan Pentadbir
+              Pusat Kawalan
             </h1>
             <p className="text-xs text-neutral-400">
-              Sila masukkan Kod Laluan Pengurusan Teater KPMBP untuk mengakses dashboard.
+              Masukkan 4 digit Pin Keselamatan
             </p>
           </div>
 
@@ -675,14 +694,25 @@ export const AdminDashboard: React.FC = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <input
+                ref={pinInputRef}
+                autoFocus
                 type="password"
                 required
                 maxLength={4}
                 autoComplete="current-password"
                 placeholder="••••"
                 value={adminPin}
-                onChange={e => setAdminPin(e.target.value)}
-                className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-3.5 text-center text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500 text-lg tracking-[0.4em] font-mono"
+                onChange={e => {
+                  const val = e.target.value;
+                  setAdminPin(val);
+                  if (val === '2026') {
+                    localStorage.setItem('teater_admin_auth', 'true');
+                    setIsAuthenticated(true);
+                    setAuthError(null);
+                    window.dispatchEvent(new Event('storage'));
+                  }
+                }}
+                className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-3.5 text-center text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-lg tracking-[0.4em] font-mono"
               />
             </div>
 
@@ -748,7 +778,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* KPI Stats Bento Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="bg-neutral-900 border border-white/10 p-4 rounded-3xl space-y-1">
           <span className="text-[10px] font-mono uppercase text-neutral-400 font-bold">Jumlah Pelajar</span>
           <p className="text-2xl font-black text-white">{totalStudents}</p>
@@ -759,12 +789,6 @@ export const AdminDashboard: React.FC = () => {
           <span className="text-[10px] font-mono uppercase text-amber-300 font-bold">Pending Review</span>
           <p className="text-2xl font-black text-amber-400">{pendingCount}</p>
           <span className="text-[10px] font-mono text-amber-500/80 block">Perlu Disemak</span>
-        </div>
-
-        <div className="bg-neutral-900 border border-blue-500/30 p-4 rounded-3xl space-y-1">
-          <span className="text-[10px] font-mono uppercase text-blue-300 font-bold">Dihubungi</span>
-          <p className="text-2xl font-black text-blue-400">{contactedCount}</p>
-          <span className="text-[10px] font-mono text-blue-500/80 block">WhatsApp Sent</span>
         </div>
 
         <div className="bg-neutral-900 border border-emerald-500/30 p-4 rounded-3xl space-y-1">
@@ -821,7 +845,7 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           <Calendar className="w-4 h-4" />
-          <span>Acara & Carousel ({events.length})</span>
+          <span>Acara ({events.length})</span>
         </button>
 
         <button
@@ -1086,9 +1110,9 @@ export const AdminDashboard: React.FC = () => {
                           {/* Quick Status Dropdown, Note button, and Delete Button */}
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
                             <select
-                              value={std.status}
+                              value={std.status === 'PENDING' ? 'PENDING_REVIEW' : (std.status === 'JOINED' ? 'JOINED_COMMUNITY' : std.status)}
                               onChange={e => handleUpdateStudentStatus(std.id, e.target.value as RegistrationStatus)}
-                              className="bg-neutral-950 border border-white/10 rounded-xl px-2 py-1 text-[10px] text-neutral-300 focus:outline-none focus:border-amber-500"
+                              className="bg-neutral-950 border border-white/10 rounded-xl px-2 py-1 text-[10px] text-neutral-300 focus:outline-none focus:border-amber-500 cursor-pointer"
                             >
                               <option value="PENDING_REVIEW">Pending Review</option>
                               <option value="CONTACTED">Contacted</option>
@@ -1853,27 +1877,6 @@ export const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-400 font-mono font-bold uppercase text-[10px] mb-1">
-                    Hadiah Utama (Amount) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editingEvent.prizes?.[0]?.amount || 'RM 150.00'}
-                    onChange={(e) => {
-                      const updatedPrizes = [...(editingEvent.prizes || [])];
-                      if (updatedPrizes.length === 0) {
-                        updatedPrizes.push({ rank: 'Hadiah Utama', amount: e.target.value, description: 'Trofi + Sijil' });
-                      } else {
-                        updatedPrizes[0] = { ...updatedPrizes[0], amount: e.target.value };
-                      }
-                      setEditingEvent({ ...editingEvent, prizes: updatedPrizes });
-                    }}
-                    placeholder="Cth: RM 150.00"
-                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-400 font-mono font-bold uppercase text-[10px] mb-1">
                     Label Tarikh Tutup (Deadline)
                   </label>
                   <input
@@ -1884,9 +1887,6 @@ export const AdminDashboard: React.FC = () => {
                     className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-400 font-mono font-bold uppercase text-[10px] mb-1">
                     Lokasi / Venue Pentas *
@@ -1900,6 +1900,98 @@ export const AdminDashboard: React.FC = () => {
                     className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
+              </div>
+
+              {/* Comprehensive Prize Management */}
+              <div className="bg-neutral-950 p-4 rounded-2xl border border-white/5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    <span className="font-mono font-bold uppercase text-[11px] text-white">
+                      Hadiah & Ganjaran Pemenang
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentPrizes = editingEvent.prizes || [];
+                      const newPrizes = [
+                        ...currentPrizes,
+                        { rank: `Hadiah #${currentPrizes.length + 1}`, amount: 'RM 50.00', description: 'Trofi + Sijil' }
+                      ];
+                      setEditingEvent({ ...editingEvent, prizes: newPrizes });
+                    }}
+                    className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-[10px] font-bold font-mono uppercase flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Tambah Hadiah</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                  {(editingEvent.prizes || []).map((prize, pIdx) => (
+                    <div key={pIdx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-neutral-900 p-2.5 rounded-xl border border-white/5 items-center">
+                      <div className="sm:col-span-4">
+                        <label className="text-[9px] font-mono text-neutral-500 block mb-0.5">Peringkat / Kategori</label>
+                        <input
+                          type="text"
+                          value={prize.rank}
+                          onChange={(e) => {
+                            const updated = [...(editingEvent.prizes || [])];
+                            updated[pIdx] = { ...updated[pIdx], rank: e.target.value };
+                            setEditingEvent({ ...editingEvent, prizes: updated });
+                          }}
+                          placeholder="Cth: Tempat Pertama"
+                          className="w-full bg-neutral-950 border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-xs font-bold focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-3">
+                        <label className="text-[9px] font-mono text-neutral-500 block mb-0.5">Jumlah / Nilai</label>
+                        <input
+                          type="text"
+                          value={prize.amount}
+                          onChange={(e) => {
+                            const updated = [...(editingEvent.prizes || [])];
+                            updated[pIdx] = { ...updated[pIdx], amount: e.target.value };
+                            setEditingEvent({ ...editingEvent, prizes: updated });
+                          }}
+                          placeholder="Cth: RM 300.00"
+                          className="w-full bg-neutral-950 border border-white/10 rounded-lg px-2.5 py-1.5 text-amber-400 text-xs font-mono font-bold focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-4">
+                        <label className="text-[9px] font-mono text-neutral-500 block mb-0.5">Penerangan / Sijil</label>
+                        <input
+                          type="text"
+                          value={prize.description || ''}
+                          onChange={(e) => {
+                            const updated = [...(editingEvent.prizes || [])];
+                            updated[pIdx] = { ...updated[pIdx], description: e.target.value };
+                            setEditingEvent({ ...editingEvent, prizes: updated });
+                          }}
+                          placeholder="Cth: Trofi + Sijil"
+                          className="w-full bg-neutral-950 border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-1 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = (editingEvent.prizes || []).filter((_, idx) => idx !== pIdx);
+                            setEditingEvent({ ...editingEvent, prizes: updated });
+                          }}
+                          disabled={(editingEvent.prizes || []).length <= 1}
+                          className="p-1.5 text-neutral-500 hover:text-red-400 rounded-lg hover:bg-neutral-950 transition-colors disabled:opacity-30 disabled:hover:text-neutral-500 cursor-pointer"
+                          title="Padam Hadiah"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-400 font-mono font-bold uppercase text-[10px] mb-1">
                     Bilangan Ahli (Format)
@@ -1913,9 +2005,6 @@ export const AdminDashboard: React.FC = () => {
                     className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-neutral-400 font-mono font-bold uppercase text-[10px] mb-1">
                     Tarikh Pementasan
@@ -1927,20 +2016,21 @@ export const AdminDashboard: React.FC = () => {
                     className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 font-mono"
                   />
                 </div>
-                <div>
-                  <label className="block text-neutral-400 font-mono font-bold uppercase text-[10px] mb-1">
-                    Status Acara
-                  </label>
-                  <select
-                    value={editingEvent.status}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, status: e.target.value as any })}
-                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 font-bold"
-                  >
-                    <option value="ACTIVE">AKTIF (ACTIVE)</option>
-                    <option value="UPCOMING">AKAN DATANG (UPCOMING)</option>
-                    <option value="CLOSED">DITUTUP (CLOSED)</option>
-                  </select>
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-mono font-bold uppercase text-[10px] mb-1">
+                  Status Acara
+                </label>
+                <select
+                  value={editingEvent.status}
+                  onChange={(e) => setEditingEvent({ ...editingEvent, status: e.target.value as any })}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 font-bold"
+                >
+                  <option value="ACTIVE">AKTIF (ACTIVE)</option>
+                  <option value="UPCOMING">AKAN DATANG (UPCOMING)</option>
+                  <option value="CLOSED">DITUTUP (CLOSED)</option>
+                </select>
               </div>
 
               <div className="pt-4 flex items-center justify-end border-t border-white/10 gap-3">

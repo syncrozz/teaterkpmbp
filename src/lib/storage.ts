@@ -359,7 +359,7 @@ class StorageManager {
       ...studentData,
       id: 'std-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
       student_id: cleanStudentId,
-      status: 'PENDING',
+      status: 'PENDING_REVIEW',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

@@ -16,6 +16,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
   switch (status) {
     // Student statuses
     case 'PENDING':
+    case 'PENDING_REVIEW':
       return (
         <span className={`inline-flex items-center font-medium rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 ${sizeClasses}`}>
           <span className="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -37,10 +38,18 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
         </span>
       );
     case 'JOINED':
+    case 'JOINED_COMMUNITY':
       return (
         <span className={`inline-flex items-center font-medium rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 ${sizeClasses}`}>
           <span className="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-400" />
           Joined Community
+        </span>
+      );
+    case 'NOT_JOINED':
+      return (
+        <span className={`inline-flex items-center font-medium rounded-full bg-neutral-500/15 text-neutral-400 border border-neutral-500/30 ${sizeClasses}`}>
+          <span className="w-1.5 h-1.5 mr-1.5 rounded-full bg-neutral-400" />
+          Not Joined
         </span>
       );
     case 'REJECTED':

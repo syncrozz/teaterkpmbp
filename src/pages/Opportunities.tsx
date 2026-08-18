@@ -76,7 +76,7 @@ export const Opportunities: React.FC = () => {
               Peluang & Festival Luar
             </h1>
             <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-              Senarai rasmi pertandingan teater MARA, festival drama belia IPT, dan sayembara skrip peringkat negeri dan kebangsaan. Setiap peluang disertakan sumber rasmi penganjur.
+              Temui pertandingan, festival dan peluang persembahan teater di luar KPMBP. Terokai peluang yang tersedia dan ambil inisiatif untuk menyertai mana-mana acara yang sesuai.
             </p>
           </div>
 
@@ -157,12 +157,12 @@ export const Opportunities: React.FC = () => {
             className="bg-neutral-900 border border-white/10 hover:border-amber-500/40 rounded-3xl p-6 transition-all hover:-translate-y-1 shadow-xl flex flex-col justify-between group space-y-5"
           >
             <div className="space-y-4">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-neutral-950 text-amber-300 border border-white/5 font-bold">
-                  {opp.category}
-                </span>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={opp.status} />
+              {/* Row 1: Category (+ Admin Actions) | Row 2: Status Badge */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-mono uppercase px-2.5 py-1 rounded-full bg-neutral-950 text-amber-300 border border-white/5 font-bold inline-block">
+                    {opp.category}
+                  </span>
                   {isAdmin && (
                     <button
                       onClick={(e) => {
@@ -175,6 +175,9 @@ export const Opportunities: React.FC = () => {
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
+                </div>
+                <div>
+                  <StatusBadge status={opp.status} />
                 </div>
               </div>
 

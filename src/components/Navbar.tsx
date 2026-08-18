@@ -4,6 +4,7 @@ import {
   X, 
   Sparkles, 
   Shield, 
+  ShieldCheck,
   Users, 
   Calendar, 
   BookOpen, 
@@ -13,7 +14,8 @@ import {
   GraduationCap, 
   Bell,
   HeartHandshake,
-  Lock
+  Lock,
+  LogOut
 } from 'lucide-react';
 
 export type PageView = 
@@ -103,22 +105,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => handleNavClick('admin')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-tight transition-all flex items-center gap-1.5 border ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-tight transition-all flex items-center gap-1.5 border cursor-pointer ${
                     currentPage === 'admin'
-                      ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
-                      : 'bg-neutral-900 text-amber-400 border-white/10 hover:bg-neutral-800'
+                      ? 'bg-emerald-500 text-neutral-950 border-emerald-400 shadow-md shadow-emerald-500/25'
+                      : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/25 hover:border-emerald-400'
                   }`}
+                  title="Mod Pentadbir Aktif"
                 >
-                  <Shield className="w-3.5 h-3.5" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Admin Dashboard</span>
                 </button>
                 {onAdminLogout && (
                   <button
                     onClick={onAdminLogout}
-                    className="p-1.5 rounded-full text-neutral-400 hover:text-red-400 hover:bg-neutral-900 transition-colors"
-                    title="Log Keluar Admin"
+                    className="px-3 py-1.5 rounded-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/40 hover:border-red-500 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-red-950/40 active:scale-95"
+                    title="Log Keluar Mod Pentadbir"
+                    aria-label="Log Keluar"
                   >
-                    <Lock className="w-3.5 h-3.5" />
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Logout</span>
                   </button>
                 )}
               </div>
@@ -206,12 +212,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {isAdminLoggedIn ? (
-                <button
-                  onClick={() => handleNavClick('admin')}
-                  className="flex-1 py-3 rounded-2xl bg-neutral-900 text-amber-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-white/10"
-                >
-                  <Shield className="w-4 h-4" /> Buka Admin Dashboard
-                </button>
+                <div className="flex flex-col sm:flex-row gap-2 flex-1">
+                  <button
+                    onClick={() => handleNavClick('admin')}
+                    className="flex-1 py-3 rounded-2xl bg-emerald-950/50 text-emerald-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-emerald-500/40 hover:bg-emerald-900/50 transition-colors"
+                  >
+                    <ShieldCheck className="w-4 h-4" /> Buka Admin Dashboard
+                  </button>
+                  {onAdminLogout && (
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        onAdminLogout();
+                      }}
+                      className="py-3 px-4 rounded-2xl bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/40 hover:border-red-500 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" /> Log Keluar Admin
+                    </button>
+                  )}
+                </div>
               ) : (
                 <button
                   onClick={() => {

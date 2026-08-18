@@ -8,21 +8,26 @@ import {
   Trophy, 
   Users, 
   Sparkles, 
-  ArrowRight,
-  ShieldAlert,
-  CheckCircle2
+  ArrowRight, 
+  ShieldAlert, 
+  CheckCircle2,
+  Edit3
 } from 'lucide-react';
 
 interface EventSpotlightProps {
   event: TheatreEvent;
   onJoinClick: () => void;
   onViewTeamsClick: () => void;
+  onEditEventClick?: () => void;
+  isAdmin?: boolean;
 }
 
 export const EventSpotlight: React.FC<EventSpotlightProps> = ({
   event,
   onJoinClick,
-  onViewTeamsClick
+  onViewTeamsClick,
+  onEditEventClick,
+  isAdmin = false
 }) => {
   return (
     <div className="relative overflow-hidden rounded-3xl bg-neutral-900 border border-white/10 p-6 sm:p-8 md:p-10 shadow-2xl space-y-8">
@@ -98,11 +103,23 @@ export const EventSpotlight: React.FC<EventSpotlightProps> = ({
 
       {/* Prizes Section */}
       <div className="bg-neutral-950 rounded-3xl p-5 md:p-6 border border-white/5 space-y-4">
-        <div className="flex items-center gap-2 text-amber-400">
-          <Trophy className="w-5 h-5" />
-          <h3 className="text-sm font-black text-white uppercase tracking-widest">
-            Hadiah & Ganjaran Pemenang
-          </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-amber-400">
+            <Trophy className="w-5 h-5" />
+            <h3 className="text-sm font-black text-white uppercase tracking-widest">
+              Hadiah & Ganjaran Pemenang
+            </h3>
+          </div>
+          {isAdmin && onEditEventClick && (
+            <button
+              onClick={onEditEventClick}
+              className="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+              title="Kemas kini hadiah & butiran acara dalam Pusat Kawalan Pentadbir"
+              aria-label="Edit Hadiah & Acara"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

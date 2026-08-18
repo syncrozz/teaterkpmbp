@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PageView } from '../components/Navbar';
 import { storage, useLiveStorage } from '../lib/storage';
 import { EventSpotlight } from '../components/EventSpotlight';
 import { EventSpotlightCarousel } from '../components/EventSpotlightCarousel';
 import { WhatsAppCommunityCard } from '../components/WhatsAppCommunityCard';
+import { StatusBadge } from '../components/StatusBadge';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -21,7 +22,11 @@ import {
   HelpCircle,
   Clock,
   Layers,
-  Award
+  Award,
+  Search,
+  UserCheck,
+  X,
+  HeartHandshake
 } from 'lucide-react';
 
 interface HomeProps {
@@ -37,6 +42,9 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const studentsCount = students.length;
   const teamsCount = teams.length;
   const sirNotes = store.sir_notes.slice(0, 2);
+
+  const [showStudentListModal, setShowStudentListModal] = useState(false);
+  const [studentSearch, setStudentSearch] = useState('');
 
   const valueProps = [
     {
@@ -252,25 +260,46 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
           <div className="space-y-3">
             <div 
-              onClick={() => onNavigate('join')}
-              className="flex items-center justify-between border-b border-white/5 pb-2 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setShowStudentListModal(true)}
+              className="flex items-center justify-between border-b border-white/5 pb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-xl transition-all group"
+              title="Klik untuk melihat senarai asas pelajar berdaftar (Nama Panggilan x Kumpulan x Status)"
             >
-              <span className="text-neutral-400 text-xs">Pelajar Minat</span>
-              <span className="text-2xl font-black text-amber-400 font-mono">{studentsCount > 0 ? studentsCount : '142'}</span>
+              <div className="flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="text-neutral-300 group-hover:text-white text-xs font-semibold">Pelajar Minat</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-2xl font-black text-amber-400 group-hover:text-amber-300 transition-colors font-mono">{studentsCount}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
             </div>
             <div 
               onClick={() => onNavigate('teams')}
-              className="flex items-center justify-between border-b border-white/5 pb-2 cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center justify-between border-b border-white/5 pb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-xl transition-all group"
+              title="Klik untuk melihat senarai kumpulan aktif berdaftar"
             >
-              <span className="text-neutral-400 text-xs">Team Aktif</span>
-              <span className="text-2xl font-black text-white font-mono">{teamsCount > 0 ? teamsCount : '12'}</span>
+              <div className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="text-neutral-300 group-hover:text-white text-xs font-semibold">Team Aktif</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-2xl font-black text-white group-hover:text-amber-400 transition-colors font-mono">{teamsCount}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
             </div>
             <div 
               onClick={() => onNavigate('opportunities')}
-              className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center justify-between cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-xl transition-all group"
+              title="Klik untuk melihat peluang pentas & festival luar"
             >
-              <span className="text-neutral-400 text-xs">Peluang Pentas</span>
-              <span className="text-2xl font-black text-red-500 font-mono">03</span>
+              <div className="flex items-center gap-1.5">
+                <Trophy className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition-transform" />
+                <span className="text-neutral-300 group-hover:text-white text-xs font-semibold">Pentas Luar</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-2xl font-black text-red-400 group-hover:text-red-300 transition-colors font-mono">{store.opportunities ? String(store.opportunities.length).padStart(2, '0') : '03'}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
             </div>
           </div>
 
@@ -312,18 +341,23 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               <div
                 key={idx}
                 onClick={() => onNavigate(target)}
-                className="bg-neutral-900/60 border border-white/5 hover:border-amber-500/40 hover:bg-neutral-900 rounded-3xl p-6 transition-all hover:-translate-y-1 shadow-lg space-y-3 group cursor-pointer"
+                className="bg-neutral-900/60 border border-white/5 hover:border-amber-500/40 hover:bg-neutral-900 rounded-3xl p-5 sm:p-6 transition-all hover:-translate-y-1 shadow-lg group cursor-pointer grid grid-cols-[auto_1fr] items-start gap-4"
               >
-                <div className="text-3xl select-none group-hover:scale-110 transition-transform inline-block">
+                {/* Column 1: Icon */}
+                <div className="w-12 h-12 rounded-2xl bg-neutral-950/80 border border-white/5 flex items-center justify-center text-2xl select-none group-hover:scale-110 group-hover:border-amber-500/30 transition-transform shrink-0 shadow-inner">
                   {card.icon}
                 </div>
-                <h4 className="text-base font-bold text-white uppercase tracking-tight group-hover:text-amber-400 transition-colors flex items-center justify-between">
-                  <span>{card.title}</span>
-                  <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-amber-400 transition-opacity" />
-                </h4>
-                <p className="text-xs text-neutral-400 leading-relaxed">
-                  {card.desc}
-                </p>
+
+                {/* Column 2: Title & Description */}
+                <div className="space-y-1 min-w-0">
+                  <h4 className="text-sm sm:text-base font-bold text-white uppercase tracking-tight group-hover:text-amber-400 transition-colors flex items-center justify-between gap-1.5">
+                    <span className="truncate">{card.title}</span>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </h4>
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    {card.desc}
+                  </p>
+                </div>
               </div>
             );
           })}
@@ -337,6 +371,8 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             event={activeEvent}
             onJoinClick={() => onNavigate('join')}
             onViewTeamsClick={() => onNavigate('teams')}
+            isAdmin={typeof window !== 'undefined' && localStorage.getItem('teater_admin_auth') === 'true'}
+            onEditEventClick={() => onNavigate('admin')}
           />
         </section>
       )}
@@ -459,6 +495,155 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </button>
         </div>
       </section>
+
+      {/* MODAL: SENARAI PELAJAR BERDAFTAR (NAMA PANGGILAN x KUMPULAN x STATUS) */}
+      {showStudentListModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-white/10">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-mono font-bold uppercase tracking-widest">
+                  <UserCheck className="w-3.5 h-3.5" /> KOMUNITI PELAJAR ({students.length})
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black uppercase text-white tracking-tight">
+                  Senarai Pelajar Berdaftar
+                </h3>
+                <p className="text-neutral-400 text-xs">
+                  Paparan asas komuniti: <span className="text-amber-400 font-semibold">Nama Panggilan</span> • <span className="text-amber-400 font-semibold">Kumpulan</span> • <span className="text-amber-400 font-semibold">Status</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setShowStudentListModal(false)}
+                className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                title="Tutup"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Cari nama panggilan atau status kumpulan..."
+                value={studentSearch}
+                onChange={e => setStudentSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 bg-neutral-950 border border-white/10 rounded-2xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
+              />
+              {studentSearch && (
+                <button
+                  onClick={() => setStudentSearch('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Students Table / List */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 custom-scrollbar min-h-[220px]">
+              {students.length === 0 ? (
+                <div className="text-center py-12 text-neutral-500 text-xs">
+                  Belum ada pelajar mendaftar. Jadilah yang pertama!
+                </div>
+              ) : (
+                (() => {
+                  const filtered = students.filter(s => {
+                    const q = studentSearch.toLowerCase().trim();
+                    if (!q) return true;
+                    const nickname = (s.nickname || s.full_name.split(' ')[0] || '').toLowerCase();
+                    const group = (s.group_status || '').toLowerCase();
+                    const assigned = teams.find(t => t.id === s.assigned_team_id)?.name?.toLowerCase() || '';
+                    return nickname.includes(q) || group.includes(q) || assigned.includes(q);
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-10 text-neutral-500 text-xs">
+                        Tiada pelajar dijumpai untuk carian "{studentSearch}".
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="overflow-hidden border border-white/5 rounded-2xl bg-neutral-950/60">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-white/5 bg-neutral-950 text-[10px] font-mono uppercase text-neutral-400">
+                            <th className="py-3 px-4">Nama Panggilan</th>
+                            <th className="py-3 px-4">Kumpulan</th>
+                            <th className="py-3 px-4">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5 text-xs">
+                          {filtered.map((std, idx) => {
+                            const displayName = std.nickname?.trim() || std.full_name?.split(' ')[0] || 'Ahli Komuniti';
+                            const assignedTeam = teams.find(t => t.id === std.assigned_team_id);
+                            const groupDisplay = assignedTeam ? assignedTeam.name : std.group_status || 'Belum Mempunyai Kumpulan';
+                            
+                            return (
+                              <tr key={std.id || idx} className="hover:bg-white/[0.02] transition-colors">
+                                <td className="py-3.5 px-4">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                                      {displayName.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="font-bold text-white uppercase tracking-wide">
+                                      {displayName}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <div className="flex items-center gap-1.5 text-neutral-300">
+                                    <Users className="w-3.5 h-3.5 text-neutral-500" />
+                                    <span className="text-xs font-medium">{groupDisplay}</span>
+                                  </div>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <StatusBadge status={std.status || 'JOINED'} size="sm" />
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()
+              )}
+            </div>
+
+            {/* Footer actions */}
+            <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-3">
+              <span className="text-[11px] text-neutral-500">
+                Jumlah: <strong className="text-white">{students.length}</strong> pelajar berdaftar
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowStudentListModal(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs uppercase tracking-wider cursor-pointer"
+                >
+                  Tutup
+                </button>
+                <button
+                  onClick={() => {
+                    setShowStudentListModal(false);
+                    onNavigate('join');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-md"
+                >
+                  <span>Sertai Sekarang</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
