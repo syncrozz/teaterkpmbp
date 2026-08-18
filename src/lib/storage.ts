@@ -408,6 +408,53 @@ class StorageManager {
     return true;
   }
 
+  public bulkImportStudents(studentsList: Omit<Student, 'id' | 'status' | 'created_at' | 'updated_at'>[]): {
+    importedCount: number;
+    skippedCount: number;
+  } {
+    let importedCount = 0;
+    let skippedCount = 0;
+    const currentStudents = [...this.store.students];
+    const newRecords: Student[] = [];
+
+    studentsList.forEach(item => {
+      const cleanStudentId = item.student_id ? item.student_id.trim().toUpperCase() : '';
+      if (!cleanStudentId || !item.full_name) {
+        skippedCount++;
+        return;
+      }
+
+      // Check if already exists in store or within current batch
+      const exists = currentStudents.some(s => s.student_id.trim().toUpperCase() === cleanStudentId) ||
+                     newRecords.some(s => s.student_id.trim().toUpperCase() === cleanStudentId);
+
+      if (exists) {
+        skippedCount++;
+      } else {
+        const newStudent: Student = {
+          ...item,
+          id: 'std-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+          student_id: cleanStudentId,
+          status: 'PENDING',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        newRecords.push(newStudent);
+        importedCount++;
+      }
+    });
+
+    if (newRecords.length > 0) {
+      const allUpdated = [...newRecords, ...currentStudents];
+      this.saveLocal({ ...this.store, students: allUpdated });
+      newRecords.forEach(st => {
+        this.syncDocToFirestore('students', st.id, st);
+      });
+    }
+
+    return { importedCount, skippedCount };
+  }
+
   // --- EVENTS ---
   public getEvents(): TheatreEvent[] {
     return [...this.store.events];

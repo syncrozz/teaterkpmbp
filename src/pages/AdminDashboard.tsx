@@ -20,6 +20,8 @@ import {
   Clock, 
   Search, 
   Download, 
+  Upload,
+  FileText,
   Edit3, 
   Trash2, 
   Plus, 
@@ -87,6 +89,12 @@ export const AdminDashboard: React.FC = () => {
   const [newSirSummary, setNewSirSummary] = useState('');
   const [newSirContent, setNewSirContent] = useState('');
   const [newSirCategory, setNewSirCategory] = useState<SirNote['category']>('Tips & Tricks');
+
+  // CSV Import Modal State
+  const [showCsvImportModal, setShowCsvImportModal] = useState(false);
+  const [csvImportText, setCsvImportText] = useState('');
+  const [csvImportResult, setCsvImportResult] = useState<{ imported: number; skipped: number } | null>(null);
+  const [csvImportError, setCsvImportError] = useState<string | null>(null);
 
   const [firebaseSyncing, setFirebaseSyncing] = useState(false);
   const [firebaseSyncMsg, setFirebaseSyncMsg] = useState<string | null>(null);
@@ -173,6 +181,119 @@ export const AdminDashboard: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Helper to parse CSV line handling quotes
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(cur.trim().replace(/^"|"$/g, ''));
+        cur = '';
+      } else {
+        cur += char;
+      }
+    }
+    result.push(cur.trim().replace(/^"|"$/g, ''));
+    return result;
+  };
+
+  // Process CSV Text Import
+  const handleProcessCsvImport = () => {
+    setCsvImportError(null);
+    setCsvImportResult(null);
+
+    if (!csvImportText.trim()) {
+      setCsvImportError('Sila masukkan atau muat naik kandungan fail CSV terlebih dahulu.');
+      return;
+    }
+
+    const lines = csvImportText.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) {
+      setCsvImportError('Format fail CSV kosong.');
+      return;
+    }
+
+    // Check if first row is header
+    const firstRow = parseCSVLine(lines[0]);
+    const isHeader = firstRow.some(col => 
+      col.toLowerCase().includes('id') || 
+      col.toLowerCase().includes('nama') || 
+      col.toLowerCase().includes('program') ||
+      col.toLowerCase().includes('student')
+    );
+
+    const dataRows = isHeader ? lines.slice(1) : lines;
+
+    if (dataRows.length === 0) {
+      setCsvImportError('Tiada data pelajar ditemui dalam fail CSV.');
+      return;
+    }
+
+    const parsedStudents: Omit<Student, 'id' | 'status' | 'created_at' | 'updated_at'>[] = [];
+
+    dataRows.forEach(rowStr => {
+      const cols = parseCSVLine(rowStr);
+      if (cols.length >= 2) {
+        // [ID, Nama, Program, Kelas, Sem, Phone, Email, ...]
+        const studentId = cols[0] || '';
+        const fullName = cols[1] || '';
+        const programme = (cols[2] || 'DIT') as any;
+        const className = cols[3] || 'DIT 1A';
+        const sem = parseInt(cols[4]) || 1;
+        const phone = cols[5] || '012-3456789';
+        const email = cols[6] || `${studentId.toLowerCase()}@kpmbp.edu.my`;
+        const interestsRaw = cols[8] || cols[7] || 'LAKONAN';
+        const interests = interestsRaw.split(/[,;/]/).map(s => s.trim().toUpperCase()).filter(Boolean);
+
+        if (studentId && fullName) {
+          parsedStudents.push({
+            student_id: studentId.toUpperCase(),
+            full_name: fullName,
+            programme: programme || 'DLM',
+            class_name: className,
+            semester: sem,
+            phone: phone,
+            email: email,
+            interests: interests.length > 0 ? interests : ['LAKONAN'],
+            experience_level: 'Tiada pengalaman',
+            motivation: 'Pendaftaran pukal melalui import CSV admin',
+            group_status: 'Saya mahu mencari kumpulan',
+            consent: true
+          });
+        }
+      }
+    });
+
+    if (parsedStudents.length === 0) {
+      setCsvImportError('Gagal memproses baris data. Pastikan format CSV sekurang-kurangnya mengandungi [ID Pelajar, Nama Penuh].');
+      return;
+    }
+
+    const res = storage.bulkImportStudents(parsedStudents);
+    setCsvImportResult({
+      imported: res.importedCount,
+      skipped: res.skippedCount
+    });
+    refreshAll();
+  };
+
+  // Handle File Input for CSV
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setCsvImportText(text || '');
+    };
+    reader.readAsText(file);
   };
 
   // Announcement submit
@@ -376,6 +497,19 @@ export const AdminDashboard: React.FC = () => {
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
+            onClick={() => {
+              setCsvImportText('');
+              setCsvImportResult(null);
+              setCsvImportError(null);
+              setShowCsvImportModal(true);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Import CSV</span>
+          </button>
+
+          <button
             onClick={handleExportCSV}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-white border border-white/10 text-xs font-mono font-bold uppercase tracking-wider transition-colors"
           >
@@ -541,12 +675,27 @@ export const AdminDashboard: React.FC = () => {
                 className="bg-neutral-950 border border-white/10 rounded-2xl px-3 py-2 text-xs text-neutral-200 focus:outline-none focus:border-amber-500 font-mono"
               >
                 <option value="ALL">Semua Program</option>
-                <option value="DIT">DIT</option>
+                <option value="DLM">DLM</option>
                 <option value="DIA">DIA</option>
+                <option value="DIT">DIT</option>
                 <option value="DBS">DBS</option>
                 <option value="DIB">DIB</option>
                 <option value="DEB">DEB</option>
               </select>
+
+              <button
+                onClick={() => {
+                  setCsvImportText('');
+                  setCsvImportResult(null);
+                  setCsvImportError(null);
+                  setShowCsvImportModal(true);
+                }}
+                className="px-3.5 py-2 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-amber-400 border border-amber-500/30 text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                title="Import Pukal Senarai Pelajar Melalui CSV"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Import CSV</span>
+              </button>
             </div>
           </div>
 
@@ -1409,6 +1558,114 @@ export const AdminDashboard: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* CSV IMPORT MODAL */}
+      {showCsvImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-neutral-900 border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-2xl w-full text-white space-y-6 shadow-2xl my-8">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">
+                    Import Senarai Pelajar (CSV)
+                  </h3>
+                  <p className="text-[11px] text-neutral-400 font-mono">
+                    Muat naik fail .csv atau tampal data teks untuk pendaftaran pukal ke Firestore
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCsvImportModal(false)}
+                className="p-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Template Info Card */}
+            <div className="bg-neutral-950/80 border border-white/5 p-4 rounded-2xl space-y-2 text-xs font-mono">
+              <div className="flex items-center justify-between text-amber-400 font-bold uppercase text-[10px]">
+                <span>Susunan Lajur Format CSV:</span>
+                <span className="text-neutral-500">Pemisah Koma (,)</span>
+              </div>
+              <div className="bg-black/50 p-2.5 rounded-xl border border-white/5 text-[11px] text-neutral-300 select-all overflow-x-auto whitespace-nowrap">
+                ID Pelajar,Nama Penuh,Program,Kelas,Semester,No Telefon,Emel,Minat
+              </div>
+              <p className="text-[10px] text-neutral-400">
+                Contoh: <span className="text-neutral-200">DLM202401,Ahmad Daniel,DLM,DLM 2A,2,012-3456789,ahmad@kpmbp.edu.my,LAKONAN</span>
+              </p>
+            </div>
+
+            {/* File Upload Option */}
+            <div className="space-y-2">
+              <label className="block text-xs font-mono font-bold uppercase text-neutral-300">
+                1. Pilih Fail .CSV dari Peranti
+              </label>
+              <input
+                type="file"
+                accept=".csv,text/csv,text/plain"
+                onChange={handleFileUpload}
+                className="w-full text-xs text-neutral-400 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-mono file:font-bold file:bg-neutral-950 file:text-amber-400 file:border-white/10 hover:file:bg-neutral-800 cursor-pointer bg-neutral-950/50 p-2 rounded-2xl border border-white/10"
+              />
+            </div>
+
+            {/* Textarea Option */}
+            <div className="space-y-2">
+              <label className="block text-xs font-mono font-bold uppercase text-neutral-300">
+                2. Atau Tampal Teks CSV di Sini
+              </label>
+              <textarea
+                rows={6}
+                value={csvImportText}
+                onChange={(e) => setCsvImportText(e.target.value)}
+                placeholder="ID Pelajar,Nama Penuh,Program,Kelas,Semester,No Telefon,Emel,Minat&#10;DIA202409,Nur Aina,DIA,DIA 2B,2,011-2233445,aina@kpmbp.edu.my,SKRIP&#10;DLM202501,Muhammad Faiz,DLM,DLM 1A,1,019-8765432,faiz@kpmbp.edu.my,STAGE"
+                className="w-full bg-neutral-950 border border-white/10 rounded-2xl p-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500 font-mono"
+              />
+            </div>
+
+            {/* Alert Error / Success */}
+            {csvImportError && (
+              <div className="p-3 bg-red-950/50 border border-red-500/30 rounded-2xl text-red-300 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>{csvImportError}</span>
+              </div>
+            )}
+
+            {csvImportResult && (
+              <div className="p-3 bg-emerald-950/50 border border-emerald-500/30 rounded-2xl text-emerald-300 text-xs flex items-center justify-between font-mono">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>Berjaya import: <strong>{csvImportResult.imported}</strong> pelajar</span>
+                </div>
+                {csvImportResult.skipped > 0 && (
+                  <span className="text-amber-400 text-[11px]">(Diabaikan / Duplikasi: {csvImportResult.skipped})</span>
+                )}
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-white/10 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCsvImportModal(false)}
+                className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={handleProcessCsvImport}
+                className="px-6 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform cursor-pointer"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Proses & Import ke Sistem</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
