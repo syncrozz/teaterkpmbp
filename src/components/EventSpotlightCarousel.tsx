@@ -333,19 +333,25 @@ export const EventSpotlightCarousel: React.FC<EventSpotlightCarouselProps> = ({
 
             <div className="flex items-center gap-1.5">
               {isAdmin && (
-                <button
-                  onClick={handleOpenEdit}
-                  title="Edit Acara Ini (Admin)"
-                  className="bg-black/70 hover:bg-black text-amber-400 border border-amber-400/30 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-md transition-all active:scale-95 cursor-pointer"
-                >
-                  <Edit3 className="w-3 h-3" />
-                  <span>Edit</span>
-                </button>
+                <>
+                  <button
+                    onClick={handleOpenCreate}
+                    title="Cipta Acara / Pertandingan Baharu"
+                    className="bg-black/70 hover:bg-black text-amber-400 border border-amber-400/30 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-md transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>ADD NEW</span>
+                  </button>
+                  <button
+                    onClick={handleOpenEdit}
+                    title="Edit Acara Ini (Admin)"
+                    className="bg-black/70 hover:bg-black text-amber-400 border border-amber-400/30 p-1.5 rounded-full shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center"
+                    aria-label="Edit Acara Ini"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                </>
               )}
-
-              <span className={`${theme.pillBg} font-mono font-black text-xs px-2.5 py-1 rounded-lg tracking-tight uppercase`}>
-                {currentEvent.deadline_label || `${currentEvent.date} DEADLINE`}
-              </span>
             </div>
           </div>
 
@@ -392,7 +398,7 @@ export const EventSpotlightCarousel: React.FC<EventSpotlightCarouselProps> = ({
         </div>
 
         {/* Bottom CTA Action Buttons & Carousel Controls */}
-        <div className="pt-2 space-y-3">
+        <div className="pt-2 space-y-2.5">
           <div className="flex items-center gap-2">
             <button
               onClick={() => onNavigate('teams')}
@@ -406,6 +412,14 @@ export const EventSpotlightCarousel: React.FC<EventSpotlightCarouselProps> = ({
             >
               Daftar
             </button>
+          </div>
+
+          {/* Row Berasingan di bawah Button Daftar: Tarikh Tutup / Deadline */}
+          <div className="flex items-center justify-between gap-2 px-0.5">
+            <span className={`${theme.pillBg} font-mono font-black text-[11px] sm:text-xs px-3 py-1.5 rounded-xl tracking-tight uppercase inline-flex items-center gap-1.5 w-full justify-center`}>
+              <Clock className="w-3.5 h-3.5 opacity-70" />
+              <span>{currentEvent.deadline_label || `${currentEvent.date} DEADLINE`}</span>
+            </span>
           </div>
 
           {/* Carousel Pagination & Controls (when >= 2 events) */}
@@ -457,34 +471,10 @@ export const EventSpotlightCarousel: React.FC<EventSpotlightCarouselProps> = ({
                   </button>
                 </div>
               </>
-            ) : (
-              isAdmin && (
-                <button
-                  onClick={handleOpenCreate}
-                  className="text-[11px] font-bold text-white/80 hover:text-white flex items-center gap-1 underline underline-offset-2 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ Tambah Pertandingan Ke-2</span>
-                </button>
-              )
-            )}
+            ) : null}
           </div>
         </div>
       </div>
-
-      {/* Admin Quick Add / Manage Button Under Card */}
-      {isAdmin && (
-        <div className="mt-2 flex items-center justify-between px-2 text-xs text-neutral-400">
-          <span className="text-[11px] font-mono text-amber-500/80">⚡ Carousel Pertandingan Aktif</span>
-          <button
-            onClick={handleOpenCreate}
-            className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 hover:underline cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ Cipta Pertandingan Baharu</span>
-          </button>
-        </div>
-      )}
 
       {/* Inline Admin Edit / Create Event Modal */}
       {isEditModalOpen && editingEvent && (

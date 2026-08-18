@@ -1100,7 +1100,7 @@ export const AdminDashboard: React.FC = () => {
                                 <option value="">-- Tiada Kumpulan --</option>
                                 {teams.map(t => (
                                   <option key={t.id} value={t.id}>
-                                    {t.code ? `[${t.code}] ` : ''}{t.name} ({t.members.length}/{t.max_members})
+                                    {t.name} ({t.members.length}/{t.max_members})
                                   </option>
                                 ))}
                               </select>

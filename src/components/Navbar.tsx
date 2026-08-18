@@ -141,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 title="Log Masuk Pentadbir / Pensyarah"
               >
                 <Shield className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Admin Access</span>
+                <span className="hidden sm:inline">Admin Mode On</span>
               </button>
             )}
 

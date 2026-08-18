@@ -72,7 +72,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
       status: 'EXPLORING'
     });
 
-    setPollSuccessMsg(`Pilihan kecenderungan anda untuk ${pollSelectedGroup} (${pollSelectedRole}) telah direkodkan.`);
+    setPollSuccessMsg(`Pilihan minat anda untuk ${pollSelectedGroup} (${pollSelectedRole}) telah direkodkan.`);
     setTimeout(() => setPollSuccessMsg(null), 6000);
     setPollStudentName('');
     setPollStudentId('');
@@ -267,7 +267,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
                 className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-white/5 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer"
               >
                 <Vote className="w-4 h-4" />
-                <span>{showPollSection ? 'Tutup Undian' : 'Undian Minat'}</span>
+                <span>{showPollSection ? 'Tutup Tinjauan' : 'Tinjauan Minat'}</span>
               </button>
             </div>
           </div>
@@ -389,13 +389,13 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
           <div className="md:col-span-4 bg-neutral-900 border border-white/10 rounded-3xl p-6 flex flex-col justify-between space-y-5">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-mono font-bold uppercase tracking-widest">
-                <Vote className="w-3 h-3" /> STATISTIK PILIHAN
+                <Vote className="w-3 h-3" /> RINGKASAN MINAT AHLI
               </div>
               <h3 className="text-lg font-black uppercase text-white tracking-tight">
-                Kecenderungan Kumpulan
+                Tinjauan Minat Teater
               </h3>
               <p className="text-neutral-400 text-xs leading-relaxed">
-                Taburan undian minat pelajar mengikut grup eksplorasi A hingga E.
+                Jumlah ahli yang menunjukkan minat terhadap setiap kumpulan.
               </p>
             </div>
 
@@ -404,7 +404,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
                 <div key={grp} className="bg-neutral-950 p-3 rounded-2xl border border-white/5 flex items-center justify-between">
                   <span className="text-xs font-bold text-neutral-300">{grp}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-amber-400">{count} calon</span>
+                    <span className="text-xs font-mono font-bold text-amber-400">{count} minat</span>
                     <div className="w-16 bg-neutral-800 rounded-full h-1.5 overflow-hidden">
                       <div
                         className="bg-amber-400 h-full rounded-full"
@@ -417,7 +417,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
             </div>
 
             <div className="p-3 bg-neutral-950 rounded-2xl border border-white/5 text-[11px] text-neutral-400 text-center">
-              Pilihan ini adalah untuk rujukan awal dan fleksibel sebelum pasukan dimuktamadkan.
+              Pilihan ini membantu pihak teater mengenal pasti minat ahli sebelum pasukan dibentuk.
             </div>
           </div>
 
@@ -426,18 +426,31 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold">
-                  BORANG EKSPLORASI BAKAT
+                  TINJAUAN MINAT TEATER
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> TERBUKA
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black uppercase text-white tracking-tight">
-                Nyatakan Kecenderungan Kumpulan Anda
+                Nyatakan Minat Anda
               </h2>
-              <p className="text-neutral-400 text-xs sm:text-sm">
-                Pilih peranan yang paling anda gemari (Lakonan, Skrip, Pengarahan, atau Teknikal) dan grup pilihan anda.
+              <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed">
+                Pilih peranan teater yang anda minati dan kumpulan yang ingin anda terokai. Pilihan ini hanya sebagai rujukan awal sebelum pasukan dibentuk.
               </p>
+            </div>
+
+            {/* Clear Notice: Bukan Penetapan Kumpulan */}
+            <div className="p-4 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded-2xl flex items-start gap-3">
+              <span className="text-base flex-shrink-0 mt-0.5">💡</span>
+              <div className="space-y-0.5 text-xs">
+                <span className="font-bold font-mono uppercase tracking-wider block text-amber-400">
+                  INI BUKAN PENETAPAN KUMPULAN
+                </span>
+                <p className="text-neutral-300 leading-relaxed">
+                  Pilihan anda hanya merekodkan minat awal. Kumpulan rasmi akan ditentukan kemudian berdasarkan keperluan pasukan.
+                </p>
+              </div>
             </div>
 
             {pollSuccessMsg && (
@@ -472,7 +485,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono uppercase text-neutral-400">Pilihan Grup</label>
+                  <label className="text-[10px] font-mono uppercase text-neutral-400">Kumpulan Yang Diminati</label>
                   <select
                     value={pollSelectedGroup}
                     onChange={e => setPollSelectedGroup(e.target.value)}
@@ -486,7 +499,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono uppercase text-neutral-400">Peranan Utama Diminati</label>
+                  <label className="text-[10px] font-mono uppercase text-neutral-400">Peranan Yang Diminati</label>
                   <select
                     value={pollSelectedRole}
                     onChange={e => setPollSelectedRole(e.target.value)}
@@ -504,9 +517,9 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  className="px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-red-950/40 cursor-pointer"
+                  className="px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-red-950/40 cursor-pointer active:scale-95"
                 >
-                  Hantar Pilihan Kumpulan
+                  Hantar Minat Saya
                 </button>
               </div>
             </form>
