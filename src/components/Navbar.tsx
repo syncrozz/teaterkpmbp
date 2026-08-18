@@ -95,29 +95,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </button>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden xl:flex items-center gap-1">
-            {navItems.map(item => {
-              const Icon = item.icon;
-              const isActive = currentPage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-neutral-900 text-white border border-white/15 shadow-sm ring-1 ring-amber-500/40'
-                      : 'text-neutral-400 hover:text-white hover:bg-neutral-900/60'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-amber-400' : 'text-neutral-500'}`} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          {/* Navigation Links - Hidden horizontally, accessible via Menu button */}
 
-          {/* Admin Control Button & Mobile Menu Trigger */}
+          {/* Admin Control Button & Menu Trigger */}
           <div className="flex items-center gap-2.5">
             {isAdminLoggedIn ? (
               <div className="flex items-center gap-1.5">
@@ -159,79 +139,92 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Quick Register CTA on Desktop */}
+            {/* Quick Register CTA */}
             <button
               onClick={() => handleNavClick('join')}
-              className="hidden md:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold uppercase tracking-wider shadow-md shadow-red-950/40 transition-transform active:scale-95"
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold uppercase tracking-wider shadow-md shadow-red-950/40 transition-transform active:scale-95"
             >
               <span>Daftar Minat</span>
             </button>
 
-            {/* Mobile Hamburger Button */}
+            {/* Menu Button (SVG Trigger) */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-900 focus:outline-none border border-white/5"
+              className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-900 focus:outline-none border border-white/10 transition-colors flex items-center gap-2"
               aria-label="Buka Menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6 text-amber-400" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-6 h-6 text-amber-400" /> : <Menu className="w-6 h-6 text-white" />}
+              <span className="hidden md:inline text-xs font-bold uppercase tracking-wider text-neutral-300">
+                {mobileMenuOpen ? 'Tutup' : 'Menu'}
+              </span>
             </button>
           </div>
 
         </div>
       </div>
 
-      {/* Mobile Drawer Navigation */}
+      {/* Drawer / Dropdown Navigation when Menu button is clicked */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-[#0A0A0A] border-b border-white/10 px-4 pt-3 pb-6 space-y-1 max-h-[80vh] overflow-y-auto">
-          <div className="px-3 py-2 text-xs font-mono font-bold uppercase tracking-widest text-amber-500 border-b border-white/5 mb-2">
-            Pusat Navigasi Teater KPMBP
-          </div>
-          {navItems.map(item => {
-            const Icon = item.icon;
-            const isActive = currentPage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-semibold uppercase tracking-wider transition-all ${
-                  isActive
-                    ? 'bg-neutral-900 text-amber-400 border border-white/15 ring-1 ring-amber-500/30'
-                    : 'text-neutral-300 hover:bg-neutral-900/60 hover:text-white'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-neutral-500'}`} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        <div className="bg-[#0A0A0A] border-b border-white/10 px-4 sm:px-6 lg:px-8 pt-4 pb-6 space-y-1 max-h-[85vh] overflow-y-auto shadow-2xl">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between px-3 py-2 text-xs font-mono font-bold uppercase tracking-widest text-amber-500 border-b border-white/5 mb-3">
+              <span>Pusat Navigasi Teater KPMBP</span>
+              <span className="text-[10px] text-neutral-500 font-normal">Pilih Halaman</span>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {navItems.map(item => {
+                const Icon = item.icon;
+                const isActive = currentPage === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavClick(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold uppercase tracking-wider transition-all text-left ${
+                      isActive
+                        ? 'bg-neutral-900 text-amber-400 border border-white/15 ring-1 ring-amber-500/30 shadow-md'
+                        : 'text-neutral-300 hover:bg-neutral-900/80 hover:text-white border border-transparent hover:border-white/5'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl ${isActive ? 'bg-amber-500/20 text-amber-400' : 'bg-neutral-950 text-neutral-400'}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs sm:text-sm">{item.label}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="pt-4 mt-4 border-t border-white/10 space-y-2">
-            <button
-              onClick={() => handleNavClick('join')}
-              className="w-full py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs uppercase tracking-widest text-center shadow-lg shadow-red-950/40"
-            >
-              🎭 Sertai Komuniti Teater KPMBP
-            </button>
+            <div className="pt-4 mt-4 border-t border-white/10 flex flex-col sm:flex-row gap-2.5">
+              <button
+                onClick={() => handleNavClick('join')}
+                className="flex-1 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs uppercase tracking-widest text-center shadow-lg shadow-red-950/40"
+              >
+                🎭 Sertai Komuniti Teater KPMBP
+              </button>
 
-            {isAdminLoggedIn ? (
-              <button
-                onClick={() => handleNavClick('admin')}
-                className="w-full py-2.5 rounded-2xl bg-neutral-900 text-amber-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-white/10"
-              >
-                <Shield className="w-4 h-4" /> Buka Admin Dashboard
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (onOpenAdminLogin) onOpenAdminLogin();
-                  else handleNavClick('admin');
-                }}
-                className="w-full py-2.5 rounded-2xl bg-white text-black hover:bg-amber-500 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
-              >
-                <Shield className="w-4 h-4" /> Log Masuk Pentadbir / Pensyarah
-              </button>
-            )}
+              {isAdminLoggedIn ? (
+                <button
+                  onClick={() => handleNavClick('admin')}
+                  className="flex-1 py-3 rounded-2xl bg-neutral-900 text-amber-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-white/10"
+                >
+                  <Shield className="w-4 h-4" /> Buka Admin Dashboard
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (onOpenAdminLogin) onOpenAdminLogin();
+                    else handleNavClick('admin');
+                  }}
+                  className="flex-1 py-3 rounded-2xl bg-white text-black hover:bg-amber-500 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                >
+                  <Shield className="w-4 h-4" /> Log Masuk Pentadbir / Pensyarah
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
