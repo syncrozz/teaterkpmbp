@@ -701,6 +701,22 @@ class StorageManager {
     return newSkill;
   }
 
+  public updateSkill(id: string, updates: Partial<SkillLesson>): boolean {
+    let targetSkill: SkillLesson | null = null;
+    const skills = this.store.skills.map(s => {
+      if (s.id === id) {
+        targetSkill = { ...s, ...updates };
+        return targetSkill;
+      }
+      return s;
+    });
+    this.saveLocal({ ...this.store, skills });
+    if (targetSkill) {
+      this.syncDocToFirestore('skills', id, targetSkill);
+    }
+    return true;
+  }
+
   public deleteSkill(id: string): boolean {
     const skills = this.store.skills.filter(s => s.id !== id);
     this.saveLocal({ ...this.store, skills });

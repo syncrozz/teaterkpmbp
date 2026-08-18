@@ -120,6 +120,7 @@ export const AdminDashboard: React.FC = () => {
     if (adminPin.trim() === '5313') {
       setIsAuthenticated(true);
       localStorage.setItem('teater_admin_auth', 'true');
+      window.dispatchEvent(new Event('teater_admin_auth_changed'));
       setAuthError(null);
     } else {
       setAuthError('Kod PIN keselamatan tidak sah. Sila cuba lagi.');
@@ -129,6 +130,7 @@ export const AdminDashboard: React.FC = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('teater_admin_auth');
+    window.dispatchEvent(new Event('teater_admin_auth_changed'));
   };
 
   // Student status update
