@@ -656,6 +656,91 @@ class StorageManager {
     return true;
   }
 
+  public assignStudentToTeam(studentId: string, teamId: string | ''): boolean {
+    const student = this.store.students.find(s => s.id === studentId);
+    if (!student) return false;
+
+    // 1. Remove student from any previous team
+    let teamsChanged = false;
+    const updatedTeams: Team[] = this.store.teams.map(t => {
+      const isMember = t.members.some(m => m.student_id === student.student_id || m.student_name === student.full_name);
+      if (isMember && t.id !== teamId) {
+        teamsChanged = true;
+        const newMembers = t.members.filter(m => m.student_id !== student.student_id && m.student_name !== student.full_name);
+        return {
+          ...t,
+          members: newMembers,
+          checklist: {
+            ...t.checklist,
+            has_five_members: newMembers.length >= 5,
+            has_captain: newMembers.some(m => m.is_captain) || Boolean(t.captain_name)
+          }
+        };
+      }
+      return t;
+    });
+
+    // 2. If new teamId specified, add student to target team
+    if (teamId) {
+      const targetTeamIndex = updatedTeams.findIndex(t => t.id === teamId);
+      if (targetTeamIndex >= 0) {
+        const targetTeam = updatedTeams[targetTeamIndex];
+        const alreadyInTarget = targetTeam.members.some(m => m.student_id === student.student_id || m.student_name === student.full_name);
+        if (!alreadyInTarget) {
+          const role = student.interests && student.interests.length > 0 ? student.interests[0] : 'Pelakon / Krew';
+          const newMember = {
+            id: 'tm-' + Date.now(),
+            team_id: targetTeam.id,
+            student_id: student.student_id,
+            student_name: student.full_name,
+            student_phone: student.phone,
+            role,
+            joined_at: new Date().toISOString().split('T')[0]
+          };
+          const newMembers = [...targetTeam.members, newMember];
+          updatedTeams[targetTeamIndex] = {
+            ...targetTeam,
+            members: newMembers,
+            checklist: {
+              ...targetTeam.checklist,
+              has_five_members: newMembers.length >= 5,
+              has_captain: newMembers.some(m => m.is_captain) || Boolean(targetTeam.captain_name)
+            }
+          };
+          teamsChanged = true;
+        }
+      }
+    }
+
+    // 3. Update student record
+    let updatedStudent: Student | null = null;
+    const updatedStudents = this.store.students.map(s => {
+      if (s.id === studentId) {
+        updatedStudent = {
+          ...s,
+          assigned_team_id: teamId || undefined,
+          group_status: teamId ? 'Sudah mempunyai kumpulan' : 'Belum mempunyai kumpulan',
+          updated_at: new Date().toISOString()
+        };
+        return updatedStudent;
+      }
+      return s;
+    });
+
+    this.saveLocal({ ...this.store, teams: updatedTeams, students: updatedStudents });
+
+    if (updatedStudent) {
+      this.syncDocToFirestore('students', studentId, updatedStudent);
+    }
+    if (teamsChanged) {
+      updatedTeams.forEach(t => {
+        this.syncDocToFirestore('teams', t.id, t);
+      });
+    }
+
+    return true;
+  }
+
   // --- TEAM PREFERENCES (Poll Exploration) ---
   public getTeamPreferences(eventId?: string): TeamPreference[] {
     if (eventId) {

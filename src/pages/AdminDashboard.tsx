@@ -969,17 +969,25 @@ export const AdminDashboard: React.FC = () => {
                               <span>Hubungi WA</span>
                             </a>
 
-                            {/* Group Invite Link */}
-                            <a
-                              href={waGroupInviteLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => handleUpdateStudentStatus(std.id, 'JOINED_COMMUNITY')}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-emerald-400 border border-emerald-500/30 font-bold text-xs transition-colors"
-                              title="Jemput ke Group WhatsApp"
-                            >
-                              <span>+ Group</span>
-                            </a>
+                            {/* Group Selection Droplist */}
+                            <div className="relative inline-flex items-center">
+                              <select
+                                value={std.assigned_team_id || (teams.find(t => t.members.some(m => m.student_id === std.student_id || m.student_name === std.full_name))?.id || '')}
+                                onChange={e => {
+                                  storage.assignStudentToTeam(std.id, e.target.value);
+                                  refreshAll();
+                                }}
+                                className="bg-neutral-950 hover:bg-neutral-800 text-amber-400 border border-amber-500/40 rounded-xl px-2.5 py-1.5 text-xs font-bold font-mono focus:outline-none focus:border-amber-400 cursor-pointer transition-colors max-w-[150px] truncate"
+                                title="Pilih kumpulan produksi untuk pelajar ini"
+                              >
+                                <option value="">-- Tiada Kumpulan --</option>
+                                {teams.map(t => (
+                                  <option key={t.id} value={t.id}>
+                                    {t.code ? `[${t.code}] ` : ''}{t.name} ({t.members.length}/{t.max_members})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
 
                           {/* Quick Status Dropdown, Note button, and Delete Button */}
