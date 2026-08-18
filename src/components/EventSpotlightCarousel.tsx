@@ -370,7 +370,7 @@ export const EventSpotlightCarousel: React.FC<EventSpotlightCarouselProps> = ({
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider opacity-75">Hadiah Utama</p>
               <p className="font-black text-base sm:text-lg leading-tight truncate">
-                {firstPrize} <span className="text-xs font-normal opacity-85">({prizeDesc})</span>
+                {firstPrize}
               </p>
             </div>
             <ArrowRight className="w-4 h-4 opacity-50 flex-shrink-0" />
