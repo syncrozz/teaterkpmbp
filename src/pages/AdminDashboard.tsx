@@ -4,14 +4,16 @@ import {
   Student, 
   RegistrationStatus, 
   Team, 
+  TeamStatus,
   Announcement, 
   SirNote, 
   Opportunity,
+  OpportunityStatus,
   TalentProfile,
   TheatreEvent 
 } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
-import { generateWhatsAppLink } from '../lib/whatsapp';
+import { generateWhatsAppLink, generateStudentRegistrationWhatsAppLink } from '../lib/whatsapp';
 import { 
   ShieldCheck, 
   Users, 
@@ -71,14 +73,29 @@ export const AdminDashboard: React.FC = () => {
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<'students' | 'teams' | 'events' | 'announcements' | 'sirnotes' | 'database'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'teams' | 'events' | 'opportunities' | 'announcements' | 'sirnotes' | 'database'>('students');
 
   // Student Filter state
   const [students, setStudents] = useState<Student[]>(storage.getStudents());
   const [teams, setTeams] = useState<Team[]>(storage.getTeams());
   const [events, setEvents] = useState<TheatreEvent[]>(storage.getEvents());
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(storage.getOpportunities());
   const [announcements, setAnnouncements] = useState<Announcement[]>(storage.getAnnouncements());
   const [sirNotes, setSirNotes] = useState<SirNote[]>(storage.getSirNotes());
+
+  // Opportunity Form State
+  const [showOppModal, setShowOppModal] = useState(false);
+  const [newOppTitle, setNewOppTitle] = useState('');
+  const [newOppOrganiser, setNewOppOrganiser] = useState('');
+  const [newOppCategory, setNewOppCategory] = useState('Pertandingan Drama & Teater');
+  const [newOppStatus, setNewOppStatus] = useState<OpportunityStatus>('OPEN');
+  const [newOppDeadline, setNewOppDeadline] = useState('');
+  const [newOppEventDate, setNewOppEventDate] = useState('');
+  const [newOppVenue, setNewOppVenue] = useState('Kolej Profesional MARA / Luar');
+  const [newOppPrize, setNewOppPrize] = useState('');
+  const [newOppDescription, setNewOppDescription] = useState('');
+  const [newOppOfficialUrl, setNewOppOfficialUrl] = useState('https://kpmbp.mara.gov.my');
+  const [oppToDelete, setOppToDelete] = useState<Opportunity | null>(null);
 
   // Event Edit / Create State
   const [showEventModal, setShowEventModal] = useState(false);
@@ -144,8 +161,44 @@ export const AdminDashboard: React.FC = () => {
     setStudents(storage.getStudents());
     setTeams(storage.getTeams());
     setEvents(storage.getEvents());
+    setOpportunities(storage.getOpportunities());
     setAnnouncements(storage.getAnnouncements());
     setSirNotes(storage.getSirNotes());
+  };
+
+  const handleCreateOpportunitySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOppTitle.trim() || !newOppOrganiser.trim()) return;
+
+    storage.createOpportunity({
+      title: newOppTitle.trim(),
+      organiser: newOppOrganiser.trim(),
+      category: newOppCategory,
+      status: newOppStatus,
+      deadline: newOppDeadline.trim() || 'Akan Dimaklumkan',
+      event_date: newOppEventDate.trim() || 'Akan Dimaklumkan',
+      venue: newOppVenue.trim() || 'Kolej Profesional MARA / Luar',
+      prize: newOppPrize.trim() || 'Sijil & Hadiah Wang Tunai',
+      eligibility: 'Terbuka kepada pelajar KPM & Belia Malaysia',
+      description: newOppDescription.trim() || 'Penyertaan terbuka kepada mahasiswa Kolej Profesional MARA dan belia Malaysia.',
+      official_url: newOppOfficialUrl.trim() || 'https://kpmbp.mara.gov.my'
+    });
+
+    setShowOppModal(false);
+    setNewOppTitle('');
+    setNewOppOrganiser('');
+    setNewOppDeadline('');
+    setNewOppEventDate('');
+    setNewOppPrize('');
+    setNewOppDescription('');
+    refreshAll();
+  };
+
+  const handleConfirmDeleteOpportunity = () => {
+    if (!oppToDelete) return;
+    storage.deleteOpportunity(oppToDelete.id);
+    setOppToDelete(null);
+    refreshAll();
   };
 
   useEffect(() => {
@@ -284,6 +337,7 @@ export const AdminDashboard: React.FC = () => {
       checklist: {
         has_captain: Boolean(newTeamCaptainName.trim()),
         has_five_members: false,
+        has_title: false,
         has_storyline: false,
         has_character_split: false,
         has_script: false,
@@ -771,6 +825,18 @@ export const AdminDashboard: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTab('opportunities')}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center gap-2 flex-shrink-0 ${
+            activeTab === 'opportunities'
+              ? 'bg-red-600 text-white shadow-lg shadow-red-950/40'
+              : 'text-neutral-400 hover:text-white bg-neutral-900 border border-white/5'
+          }`}
+        >
+          <Trophy className="w-4 h-4" />
+          <span>Peluang Luar ({opportunities.length})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('announcements')}
           className={`px-4 py-2.5 rounded-2xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center gap-2 flex-shrink-0 ${
             activeTab === 'announcements'
@@ -901,8 +967,9 @@ export const AdminDashboard: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-white/5 font-mono">
                   {filteredStudents.map(std => {
-                    const waLink = generateWhatsAppLink(std.phone, std.full_name, 'PENGESAHAN_PENDAFTARAN');
-                    const waGroupInviteLink = generateWhatsAppLink(std.phone, std.full_name, 'JEMPUT_GROUP');
+                    const assignedTeam = teams.find(t => t.id === std.assigned_team_id || t.members.some(m => m.student_id === std.student_id || m.student_name === std.full_name));
+                    const waLink = generateStudentRegistrationWhatsAppLink(std, 'PENGESAHAN_PENDAFTARAN', assignedTeam?.name);
+                    const waGroupInviteLink = generateStudentRegistrationWhatsAppLink(std, 'JEMPUT_GROUP', assignedTeam?.name);
                     const isSelected = selectedStudentIds.includes(std.id);
 
                     return (
@@ -933,7 +1000,10 @@ export const AdminDashboard: React.FC = () => {
                             </span>
                             <span>• Sem {std.semester}</span>
                           </div>
-                          <div className="text-[10px] text-neutral-500 font-sans">{std.email}</div>
+                          <div className="text-[10px] text-neutral-400 font-sans flex items-center gap-1.5">
+                            <Phone className="w-3 h-3 text-neutral-500" />
+                            <span>No. Tel: <span className="text-neutral-300 font-mono">{std.phone}</span></span>
+                          </div>
                         </td>
 
                         {/* Programme & Class */}
@@ -963,7 +1033,7 @@ export const AdminDashboard: React.FC = () => {
                         <td className="py-4 px-4 space-y-2 font-sans">
                           <StatusBadge status={std.status} />
                           <div className="text-[11px] text-neutral-400">
-                            Status Kumpulan: <span className="text-neutral-200 font-medium">{std.group_status}</span>
+                            Status: <span className="text-neutral-200 font-medium">{std.group_status}</span>
                           </div>
                           {std.admin_notes && (
                             <div className="text-[10px] text-amber-400 italic bg-neutral-950 p-1.5 rounded-xl border border-white/5 font-mono">
@@ -989,7 +1059,7 @@ export const AdminDashboard: React.FC = () => {
                               title="Hubungi melalui WhatsApp"
                             >
                               <MessageCircle className="w-3.5 h-3.5" />
-                              <span>Hubungi WA</span>
+                              <span>Hubungi</span>
                             </a>
 
                             {/* Group Selection Droplist */}
@@ -1319,6 +1389,84 @@ export const AdminDashboard: React.FC = () => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* TAB: OPPORTUNITIES MANAGEMENT */}
+      {activeTab === 'opportunities' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div>
+              <h2 className="text-xl font-black uppercase text-white">Pengurusan Peluang Pertandingan Luar ({opportunities.length})</h2>
+              <p className="text-xs text-neutral-400">Peluang sayembara, festival drama IPT & pertandingan MARA.</p>
+            </div>
+            <button
+              onClick={() => setShowOppModal(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-950/40 cursor-pointer active:scale-95 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Peluang</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {opportunities.map(opp => (
+              <div key={opp.id} className="bg-neutral-900 border border-white/10 p-5 rounded-3xl flex flex-col justify-between space-y-4 hover:border-amber-500/30 transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-neutral-950 text-amber-400 border border-white/5 truncate max-w-[180px]">
+                      {opp.category}
+                    </span>
+                    <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
+                      opp.status === 'OPEN' ? 'bg-emerald-500/20 text-emerald-400' :
+                      opp.status === 'UPCOMING' ? 'bg-amber-500/20 text-amber-400' : 'bg-neutral-800 text-neutral-400'
+                    }`}>
+                      {opp.status}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-bold text-white">{opp.title}</h3>
+                    <p className="text-[11px] text-neutral-400 font-mono mt-0.5">Penganjur: {opp.organiser}</p>
+                  </div>
+
+                  <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">{opp.description}</p>
+
+                  <div className="space-y-1 text-[11px] font-mono text-neutral-400 border-t border-white/5 pt-2">
+                    <div>📅 Tarikh: <span className="text-white">{opp.event_date}</span></div>
+                    <div>⏳ Tutup: <span className="text-white">{opp.deadline}</span></div>
+                    <div>🏆 Hadiah: <span className="text-amber-400 font-bold">{opp.prize}</span></div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                  <a 
+                    href={opp.official_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-xs font-mono text-amber-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>Pautan Penganjur</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+
+                  <button
+                    onClick={() => setOppToDelete(opp)}
+                    className="p-2 rounded-xl bg-neutral-950 hover:bg-red-950 text-neutral-400 hover:text-red-400 border border-white/5 transition-colors cursor-pointer"
+                    title="Padam Peluang"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {opportunities.length === 0 && (
+            <div className="text-center py-12 text-neutral-500 text-xs font-mono">
+              Tiada peluang pertandingan didaftarkan.
+            </div>
+          )}
         </div>
       )}
 
@@ -2384,6 +2532,216 @@ export const AdminDashboard: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD OPPORTUNITY */}
+      {showOppModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-xl w-full text-white space-y-6 shadow-2xl my-8">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <h3 className="text-lg font-black uppercase text-white flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-amber-500" />
+                  <span>Tambah Peluang Pertandingan Luar</span>
+                </h3>
+                <p className="text-[11px] text-neutral-400 font-mono">
+                  Daftar peluang sayembara & festival teater untuk ahli
+                </p>
+              </div>
+              <button
+                onClick={() => setShowOppModal(false)}
+                className="p-2 rounded-xl bg-neutral-950 text-neutral-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateOpportunitySubmit} className="space-y-4 text-xs font-mono">
+              <div className="space-y-1">
+                <label className="text-neutral-400 font-bold uppercase">Nama Pertandingan / Peluang *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Festival Teater IPT Kebangsaan (MAKUM 2026)"
+                  value={newOppTitle}
+                  onChange={e => setNewOppTitle(e.target.value)}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-bold uppercase">Penganjur *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: JKKN / KPT / MARA"
+                    value={newOppOrganiser}
+                    onChange={e => setNewOppOrganiser(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-bold uppercase">Kategori</label>
+                  <input
+                    type="text"
+                    value={newOppCategory}
+                    onChange={e => setNewOppCategory(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-bold uppercase">Status</label>
+                  <select
+                    value={newOppStatus}
+                    onChange={e => setNewOppStatus(e.target.value as OpportunityStatus)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="OPEN">OPEN (Dibuka)</option>
+                    <option value="UPCOMING">UPCOMING (Akan Datang)</option>
+                    <option value="CLOSED">CLOSED (Tutup)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-bold uppercase">Tarikh Tutup</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 15 Ogos 2026"
+                    value={newOppDeadline}
+                    onChange={e => setNewOppDeadline(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-bold uppercase">Tarikh Acara</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 10-14 Sept 2026"
+                    value={newOppEventDate}
+                    onChange={e => setNewOppEventDate(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-bold uppercase">Lokasi / Venue</label>
+                  <input
+                    type="text"
+                    value={newOppVenue}
+                    onChange={e => setNewOppVenue(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-bold uppercase">Hadiah / Ganjaran</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: RM 5,000 + Piala Pusingan"
+                    value={newOppPrize}
+                    onChange={e => setNewOppPrize(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-neutral-400 font-bold uppercase">Penerangan / Kriteria Penyertaan</label>
+                <textarea
+                  rows={3}
+                  value={newOppDescription}
+                  onChange={e => setNewOppDescription(e.target.value)}
+                  placeholder="Keterangan mengenai syarat, tema atau format persembahan..."
+                  className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-neutral-400 font-bold uppercase">Pautan Laman Rasmi / Borang</label>
+                <input
+                  type="url"
+                  value={newOppOfficialUrl}
+                  onChange={e => setNewOppOfficialUrl(e.target.value)}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowOppModal(false)}
+                  className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-amber-950/40 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Simpan Peluang</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE OPPORTUNITY MODAL (ADMIN) */}
+      {oppToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+          <div className="bg-neutral-900 border border-red-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full text-white space-y-6 shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">
+                  Padam Peluang Pertandingan
+                </h3>
+                <p className="text-[11px] text-neutral-400 font-mono">
+                  Tindakan Kekal Pentadbir
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-neutral-950 border border-red-500/20 p-4 rounded-2xl space-y-1.5 text-xs">
+              <div className="text-white font-bold text-sm">{oppToDelete.title}</div>
+              <div className="text-neutral-400 text-[11px]">Penganjur: {oppToDelete.organiser}</div>
+              <div className="text-neutral-500 text-[11px]">Kategori: {oppToDelete.category}</div>
+            </div>
+
+            <p className="text-xs text-neutral-300">
+              Adakah anda pasti mahu memadam peluang pertandingan ini daripada pangkalan data?
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setOppToDelete(null)}
+                className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteOpportunity}
+                className="px-6 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-red-950/40 active:scale-95 transition-transform cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Sahkan Padam</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

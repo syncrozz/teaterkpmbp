@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { storage } from '../lib/storage';
 import { Opportunity, OpportunityStatus } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
@@ -13,13 +13,43 @@ import {
   Building, 
   ShieldCheck,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Trash2,
+  Lock
 } from 'lucide-react';
 
 export const Opportunities: React.FC = () => {
-  const [opportunities] = useState<Opportunity[]>(storage.getOpportunities());
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(storage.getOpportunities());
   const [selectedStatus, setSelectedStatus] = useState<'Semua' | OpportunityStatus>('Semua');
   const [search, setSearch] = useState('');
+  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('teater_admin_auth') === 'true');
+  const [deletingOpp, setDeletingOpp] = useState<Opportunity | null>(null);
+
+  useEffect(() => {
+    const unsub = storage.subscribe(() => {
+      setOpportunities(storage.getOpportunities());
+    });
+
+    const checkAdmin = () => {
+      setIsAdmin(localStorage.getItem('teater_admin_auth') === 'true');
+    };
+
+    window.addEventListener('storage', checkAdmin);
+    window.addEventListener('teater_admin_auth_changed', checkAdmin);
+
+    return () => {
+      unsub();
+      window.removeEventListener('storage', checkAdmin);
+      window.removeEventListener('teater_admin_auth_changed', checkAdmin);
+    };
+  }, []);
+
+  const handleConfirmDelete = () => {
+    if (!deletingOpp) return;
+    storage.deleteOpportunity(deletingOpp.id);
+    setOpportunities(storage.getOpportunities());
+    setDeletingOpp(null);
+  };
 
   const filtered = opportunities.filter(opp => {
     const matchesStatus = selectedStatus === 'Semua' || opp.status === selectedStatus;
@@ -131,7 +161,21 @@ export const Opportunities: React.FC = () => {
                 <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-neutral-950 text-amber-300 border border-white/5 font-bold">
                   {opp.category}
                 </span>
-                <StatusBadge status={opp.status} />
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={opp.status} />
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setDeletingOpp(opp);
+                      }}
+                      className="p-1.5 rounded-xl bg-neutral-950 hover:bg-red-950/60 text-neutral-400 hover:text-red-400 border border-white/5 hover:border-red-500/30 transition-colors cursor-pointer"
+                      title="Padam Peluang Ini (Akses Admin)"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -199,6 +243,55 @@ export const Opportunities: React.FC = () => {
       {filtered.length === 0 && (
         <div className="text-center py-16 text-neutral-500 text-xs font-mono uppercase">
           Tiada peluang pertandingan ditemui untuk carian ini.
+        </div>
+      )}
+
+      {/* CONFIRM DELETE OPPORTUNITY MODAL (ADMIN) */}
+      {deletingOpp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+          <div className="bg-neutral-900 border border-red-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full text-white space-y-6 shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">
+                  Padam Peluang Pertandingan
+                </h3>
+                <p className="text-[11px] text-neutral-400 font-mono">
+                  Akses Pentadbir (Admin Access)
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-neutral-950 border border-red-500/20 p-4 rounded-2xl space-y-1.5 text-xs">
+              <div className="text-white font-bold text-sm">{deletingOpp.title}</div>
+              <div className="text-neutral-400 text-[11px]">Penganjur: {deletingOpp.organiser}</div>
+              <div className="text-neutral-500 text-[11px]">Kategori: {deletingOpp.category}</div>
+            </div>
+
+            <p className="text-xs text-neutral-300">
+              Adakah anda pasti mahu memadam peluang pertandingan ini daripada senarai rasmi?
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingOpp(null)}
+                className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-6 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-red-950/40 active:scale-95 transition-transform cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Sahkan Padam</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -2,6 +2,7 @@ import {
   Student,
   TheatreEvent,
   Team,
+  TeamMember,
   TeamStatus,
   Announcement,
   Opportunity,
@@ -688,7 +689,7 @@ class StorageManager {
         const alreadyInTarget = targetTeam.members.some(m => m.student_id === student.student_id || m.student_name === student.full_name);
         if (!alreadyInTarget) {
           const role = student.interests && student.interests.length > 0 ? student.interests[0] : 'Pelakon / Krew';
-          const newMember = {
+          const newMember: TeamMember = {
             id: 'tm-' + Date.now(),
             team_id: targetTeam.id,
             student_id: student.student_id,
@@ -696,6 +697,7 @@ class StorageManager {
             student_nickname: student.nickname,
             student_phone: student.phone,
             role,
+            is_captain: false,
             joined_at: new Date().toISOString().split('T')[0]
           };
           const newMembers = [...targetTeam.members, newMember];

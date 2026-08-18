@@ -149,7 +149,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdminLogin }) 
           <div className="flex items-center gap-3">
             <span>Komuniti • Bakat • Persembahan</span>
             <span>•</span>
-            <span className="text-amber-500 font-bold">Simple By Default. Powerful When Needed.</span>
+            <span>
+              DEVELOP By{' '}
+              <a
+                href="https://wa.me/60145313756"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-500 font-bold hover:text-amber-400 underline underline-offset-2 transition-colors cursor-pointer"
+              >
+                Syncrozz
+              </a>
+            </span>
           </div>
         </div>
       </div>

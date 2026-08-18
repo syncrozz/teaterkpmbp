@@ -263,7 +263,7 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
         </h1>
         <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
           Berminat dengan lakonan watak, penulisan skrip, atau kru teknikal pentas? Daftarkan minat anda di sini. 
-          <strong className="text-amber-400 font-bold"> Anda tidak perlu mempunyai Microsoft Teams untuk mendaftar.</strong> Urusetia penganjur akan menyemak dan menghubungi anda melalui WhatsApp.
+          <strong className="text-amber-400 font-bold"> Anda tidak perlu mempunyai kumpulan untuk mendaftar.</strong> Urusetia penganjur akan menyemak dan menghubungi anda melalui WhatsApp.
         </p>
       </div>
 
