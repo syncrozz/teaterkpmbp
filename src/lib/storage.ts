@@ -693,6 +693,7 @@ class StorageManager {
             team_id: targetTeam.id,
             student_id: student.student_id,
             student_name: student.full_name,
+            student_nickname: student.nickname,
             student_phone: student.phone,
             role,
             joined_at: new Date().toISOString().split('T')[0]

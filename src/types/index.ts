@@ -8,6 +8,7 @@ export type GroupStatus = 'Sudah mempunyai kumpulan' | 'Belum cukup ahli' | 'Bel
 export interface Student {
   id: string;
   full_name: string;
+  nickname?: string;
   student_id: string;
   ic_number?: string;
   programme: string;
@@ -23,6 +24,7 @@ export interface Student {
   consent: boolean;
   assigned_team_id?: string;
   notes?: string;
+  admin_notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -67,6 +69,7 @@ export interface TeamMember {
   team_id: string;
   student_id: string;
   student_name: string;
+  student_nickname?: string;
   student_phone?: string;
   role: string;
   is_captain?: boolean;

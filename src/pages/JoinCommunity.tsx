@@ -12,7 +12,10 @@ import {
   maskPhoneNumber, 
   validatePhone, 
   normalizePhone, 
-  validateEmail 
+  validateEmail,
+  toTitleCase,
+  formatLiveNickname,
+  extractSuggestedNickname
 } from '../lib/validation';
 import confetti from 'canvas-confetti';
 import { 
@@ -78,6 +81,8 @@ interface JoinCommunityProps {
 
 export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate }) => {
   const [fullName, setFullName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [isManualNickname, setIsManualNickname] = useState(false);
   const [studentId, setStudentId] = useState('');
   const [icNumber, setIcNumber] = useState('');
   const [programme, setProgramme] = useState(PROGRAMMES[0]);
@@ -100,6 +105,25 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
   const isIcPatternValid = /^[0-9]{6}-[0-9]{2}-[0-9]{4}$/.test(icNumber.trim());
   const isPhonePatternValid = /^(?:\+?601[0-9]-[0-9]{7,8}|01[0-9]-[0-9]{7,8})$/.test(phone.trim()) || phone.replace(/\D/g, '').length >= 10;
   const isFullNameValid = fullName.trim().length >= 3;
+
+  const handleFullNameChange = (val: string) => {
+    const formatted = formatLiveName(val);
+    setFullName(formatted);
+    // If user has not manually overridden the nickname, automatically suggest in Title Case
+    if (!isManualNickname) {
+      const suggested = extractSuggestedNickname(formatted);
+      setNickname(suggested);
+    }
+  };
+
+  const handleFullNameBlur = () => {
+    const normalized = normalizeFullName(fullName);
+    setFullName(normalized);
+    if (!isManualNickname && !nickname) {
+      const suggested = extractSuggestedNickname(normalized);
+      setNickname(suggested);
+    }
+  };
 
   const toggleInterest = (interest: string) => {
     if (selectedInterests.includes(interest)) {
@@ -163,8 +187,11 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
     setLoading(true);
 
     // Call storage register with normalized values
+    const finalNickname = nickname.trim() ? toTitleCase(nickname) : extractSuggestedNickname(nameCheck.cleaned);
+
     const result = storage.registerStudent({
       full_name: nameCheck.cleaned,
+      nickname: finalNickname,
       student_id: studentId.trim().toUpperCase(),
       ic_number: icNumber.trim() ? maskICNumber(icNumber) : undefined,
       programme,
@@ -210,6 +237,8 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
   const handleResetForm = () => {
     setSubmittedStudent(null);
     setFullName('');
+    setNickname('');
+    setIsManualNickname(false);
     setStudentId('');
     setIcNumber('');
     setClassName('');
@@ -338,8 +367,8 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                     type="text"
                     required
                     value={fullName}
-                    onChange={e => setFullName(formatLiveName(e.target.value))}
-                    onBlur={() => setFullName(prev => normalizeFullName(prev))}
+                    onChange={e => handleFullNameChange(e.target.value)}
+                    onBlur={handleFullNameBlur}
                     placeholder="cth: NUR AINA BATRISYIA BINTI ZULHILMI"
                     className="w-full bg-neutral-950 border border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 transition-all uppercase"
                   />
@@ -347,6 +376,42 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
                     <Check className="w-4 h-4 text-emerald-400 absolute right-3.5 top-3" />
                   )}
                 </div>
+              </div>
+
+              {/* Nama Panggilan (Title Case Auto) */}
+              <div className="sm:col-span-2 bg-neutral-950/60 border border-amber-500/20 rounded-2xl p-3.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-mono uppercase text-amber-400 font-bold">
+                    Nama Panggilan (Short Name) <span className="text-amber-400">*</span>
+                  </label>
+                  <span className="text-[10px] text-neutral-400 font-mono">
+                    Automatik Title Case (cth: Aina)
+                  </span>
+                </div>
+                <div className="relative">
+                  <User className="w-4 h-4 text-amber-500/60 absolute left-3.5 top-3" />
+                  <input
+                    type="text"
+                    value={nickname}
+                    onChange={e => {
+                      setIsManualNickname(true);
+                      setNickname(formatLiveNickname(e.target.value));
+                    }}
+                    onBlur={() => {
+                      if (nickname.trim()) {
+                        setNickname(toTitleCase(nickname));
+                      }
+                    }}
+                    placeholder="cth: Aina"
+                    className="w-full bg-neutral-900 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-xs text-amber-300 font-bold placeholder-neutral-500 focus:outline-none focus:border-amber-500 transition-all"
+                  />
+                  {nickname.trim().length >= 2 && (
+                    <Check className="w-4 h-4 text-emerald-400 absolute right-3.5 top-3" />
+                  )}
+                </div>
+                <p className="text-[11px] text-neutral-400 leading-normal">
+                  💡 Memudahkan penasihat & penganjur mengenali anda secara pantas untuk watak/peranan tanpa kekeliruan nama panjang.
+                </p>
               </div>
 
               {/* ID Pelajar */}

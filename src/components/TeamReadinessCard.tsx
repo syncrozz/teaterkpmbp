@@ -124,6 +124,11 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
                 <div className="flex items-center gap-1.5 truncate">
                   {member.is_captain && <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />}
                   <span className="text-white font-medium truncate">{member.student_name}</span>
+                  {member.student_nickname && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                      {member.student_nickname}
+                    </span>
+                  )}
                 </div>
                 <span className="text-[10px] text-neutral-400 font-mono">{member.role}</span>
               </div>

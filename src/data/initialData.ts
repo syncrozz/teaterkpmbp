@@ -119,6 +119,7 @@ export const INITIAL_STUDENTS: Student[] = [
   {
     id: 'std-001',
     full_name: 'Muhammad Amirul Hafiz',
+    nickname: 'Amirul',
     student_id: 'DIT23014',
     programme: 'Diploma in Information Technology (DIT)',
     class_name: 'DIT 4A',
@@ -139,6 +140,7 @@ export const INITIAL_STUDENTS: Student[] = [
   {
     id: 'std-002',
     full_name: 'Nur Aisyah Binti Zulkifli',
+    nickname: 'Aisyah',
     student_id: 'DIA24009',
     programme: 'Diploma in Accounting (DIA)',
     class_name: 'DIA 2B',
@@ -159,6 +161,7 @@ export const INITIAL_STUDENTS: Student[] = [
   {
     id: 'std-003',
     full_name: 'Danish Haiqal Bin Roslan',
+    nickname: 'Danish',
     student_id: 'DBS23088',
     programme: 'Diploma in Business Studies (DBS)',
     class_name: 'DBS 3C',
@@ -178,6 +181,7 @@ export const INITIAL_STUDENTS: Student[] = [
   {
     id: 'std-004',
     full_name: 'Farah Nadia Binti Kamaruddin',
+    nickname: 'Farah',
     student_id: 'DIB24031',
     programme: 'Diploma in International Business (DIB)',
     class_name: 'DIB 1A',
@@ -196,6 +200,7 @@ export const INITIAL_STUDENTS: Student[] = [
   {
     id: 'std-005',
     full_name: 'Syed Imran Bin Syed Ahmad',
+    nickname: 'Imran',
     student_id: 'DEB23022',
     programme: 'Diploma in English for Business Communication (DEB)',
     class_name: 'DEB 4A',

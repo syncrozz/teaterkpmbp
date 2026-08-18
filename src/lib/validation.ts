@@ -9,6 +9,50 @@ export function formatLiveName(input: string): string {
   return input.toUpperCase().replace(/\s{2,}/g, ' ');
 }
 
+export function toTitleCase(input: string): string {
+  if (!input) return '';
+  return input
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+export function formatLiveNickname(input: string): string {
+  if (!input) return '';
+  // Convert each word to Title Case live
+  return input
+    .split(/\s+/)
+    .map(word => {
+      if (!word) return '';
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
+export function extractSuggestedNickname(fullName: string): string {
+  if (!fullName) return '';
+  const cleaned = fullName.trim();
+  if (!cleaned) return '';
+
+  // Split words and ignore bin/binti/bt/al/ak
+  const ignoreWords = new Set(['bin', 'binti', 'bte', 'bt', 'a/l', 'a/p', 'anak', 'al', 'ap']);
+  const words = cleaned.split(/\s+/).filter(w => !ignoreWords.has(w.toLowerCase()));
+
+  if (words.length === 0) return '';
+
+  // For Malaysian/Malay names like "NUR AINA BATRISYIA", if starts with NUR/SITI/MUHAMMAD/MOHD/NIK/WAN/ENGKU/TENGKU,
+  // often the 2nd word is the calling name (e.g., "Aina" from "Nur Aina")
+  const prefixes = new Set(['nur', 'siti', 'muhammad', 'mohd', 'muhd', 'nik', 'wan', 'tengku', 'engku', 'raja', 'megat', 'che', 'syed', 'sharifah']);
+  if (words.length >= 2 && prefixes.has(words[0].toLowerCase())) {
+    return toTitleCase(words[1]);
+  }
+
+  // Otherwise return first name in Title Case
+  return toTitleCase(words[0]);
+}
+
 export function normalizeFullName(input: string): string {
   // Normalization on submit/blur: uppercase, trim edges, collapse multiple spaces
   return input.trim().toUpperCase().replace(/\s+/g, ' ');

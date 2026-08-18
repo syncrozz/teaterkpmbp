@@ -46,6 +46,7 @@ import {
   Sliders
 } from 'lucide-react';
 import { SUPABASE_POSTGRES_SCHEMA } from '../lib/sqlSchema';
+import { extractSuggestedNickname } from '../lib/validation';
 
 export const AdminDashboard: React.FC = () => {
   // Admin Authentication Gate state
@@ -406,6 +407,7 @@ export const AdminDashboard: React.FC = () => {
           parsedStudents.push({
             student_id: studentId.toUpperCase(),
             full_name: fullName,
+            nickname: extractSuggestedNickname(fullName),
             programme: programme || 'DLM',
             class_name: className,
             semester: sem,
@@ -903,7 +905,14 @@ export const AdminDashboard: React.FC = () => {
 
                         {/* Student Name & Contact */}
                         <td className="py-4 px-4 space-y-1">
-                          <div className="font-sans font-bold text-white text-sm">{std.full_name}</div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-sans font-bold text-white text-sm">{std.full_name}</span>
+                            {std.nickname && (
+                              <span className="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold font-sans">
+                                🎭 {std.nickname}
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2 text-[10px] text-neutral-400">
                             <span className="px-1.5 py-0.5 rounded bg-neutral-950 text-amber-400 font-bold border border-white/5">
                               {std.student_id}
