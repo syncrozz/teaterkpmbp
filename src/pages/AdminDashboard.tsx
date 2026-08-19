@@ -45,7 +45,9 @@ import {
   MapPin,
   X,
   Check,
-  Sliders
+  Sliders,
+  Pencil,
+  Save
 } from 'lucide-react';
 import { SUPABASE_POSTGRES_SCHEMA } from '../lib/sqlSchema';
 import { extractSuggestedNickname } from '../lib/validation';
@@ -159,6 +161,17 @@ export const AdminDashboard: React.FC = () => {
   const [newTeamMaxMembers, setNewTeamMaxMembers] = useState(7);
   const [newTeamStatus, setNewTeamStatus] = useState<TeamStatus>('FORMING');
   const [newTeamEventId, setNewTeamEventId] = useState('');
+
+  // Team Edit Modal State
+  const [showEditTeamModal, setShowEditTeamModal] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [editTeamName, setEditTeamName] = useState('');
+  const [editTeamCode, setEditTeamCode] = useState('');
+  const [editTeamPlayTitle, setEditTeamPlayTitle] = useState('');
+  const [editTeamSynopsis, setEditTeamSynopsis] = useState('');
+  const [editTeamCaptainName, setEditTeamCaptainName] = useState('');
+  const [editTeamMaxMembers, setEditTeamMaxMembers] = useState(7);
+  const [editTeamStatus, setEditTeamStatus] = useState<TeamStatus>('FORMING');
 
   // Team Delete Modal State (for Inactive/Graduated Teams)
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -360,6 +373,44 @@ export const AdminDashboard: React.FC = () => {
     });
 
     setShowCreateTeamModal(false);
+    refreshAll();
+  };
+
+  // Edit Team Handlers
+  const handleOpenEditTeam = (team: Team) => {
+    setEditingTeam(team);
+    setEditTeamName(team.name);
+    setEditTeamCode(team.code);
+    setEditTeamPlayTitle(team.play_title || '');
+    setEditTeamSynopsis(team.synopsis || '');
+    setEditTeamCaptainName(team.captain_name || '');
+    setEditTeamMaxMembers(team.max_members || 7);
+    setEditTeamStatus(team.status);
+    setShowEditTeamModal(true);
+  };
+
+  const handleSaveEditTeamSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeam || !editTeamName.trim()) return;
+
+    storage.updateTeam(editingTeam.id, {
+      name: editTeamName.trim(),
+      code: editTeamCode.trim() || editingTeam.code,
+      play_title: editTeamPlayTitle.trim() || undefined,
+      synopsis: editTeamSynopsis.trim() || undefined,
+      captain_name: editTeamCaptainName.trim() || undefined,
+      max_members: Number(editTeamMaxMembers) || 7,
+      status: editTeamStatus,
+      checklist: {
+        ...editingTeam.checklist,
+        has_title: Boolean(editTeamPlayTitle.trim()),
+        has_storyline: Boolean(editTeamSynopsis.trim()),
+        has_captain: Boolean(editTeamCaptainName.trim()) || editingTeam.checklist.has_captain
+      }
+    });
+
+    setShowEditTeamModal(false);
+    setEditingTeam(null);
     refreshAll();
   };
 
@@ -1196,6 +1247,13 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={team.status} />
+                    <button
+                      onClick={() => handleOpenEditTeam(team)}
+                      className="p-1.5 rounded-xl bg-neutral-800 hover:bg-amber-500/20 text-neutral-400 hover:text-amber-400 border border-white/5 hover:border-amber-500/30 text-xs transition-colors cursor-pointer"
+                      title="Edit Maklumat Pasukan & Tajuk Lakonan"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => handleOpenDeleteTeam(team)}
                       className="p-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/70 text-red-400 border border-red-500/20 text-xs transition-colors cursor-pointer"
@@ -2531,7 +2589,153 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* DELETE TEAM MODAL (WITH 4-DIGIT PIN) */}
+      {/* EDIT TEAM MODAL */}
+      {showEditTeamModal && editingTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-white space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <Pencil className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black uppercase text-white tracking-tight">
+                    Edit Maklumat Pasukan
+                  </h3>
+                  <p className="text-xs text-neutral-400 font-mono">
+                    Kemaskini tajuk skrip, sinopsis & status ({editingTeam.code})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditTeamModal(false)}
+                className="p-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditTeamSubmit} className="space-y-4 font-mono text-xs max-h-[70vh] overflow-y-auto pr-1">
+              <div className="space-y-1">
+                <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                  Nama Kumpulan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Kumpulan Mahsuri 2.0"
+                  value={editTeamName}
+                  onChange={e => setEditTeamName(e.target.value)}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    Kod Kumpulan
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: TEAM-01"
+                    value={editTeamCode}
+                    onChange={e => setEditTeamCode(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500 uppercase"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    Kapasiti Maksimum
+                  </label>
+                  <input
+                    type="number"
+                    min={3}
+                    max={20}
+                    value={editTeamMaxMembers}
+                    onChange={e => setEditTeamMaxMembers(parseInt(e.target.value) || 7)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-amber-400 font-bold uppercase text-[11px]">
+                  Tajuk Skrip / Pementasan
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Menanti Di Gerbang Senja"
+                  value={editPlayTitle}
+                  onChange={e => setEditPlayTitle(e.target.value)}
+                  className="w-full bg-neutral-950 border border-amber-500/30 rounded-2xl px-4 py-2.5 text-amber-300 placeholder-neutral-600 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                  Sinopsis / Ringkasan Cerita
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Ringkasan jalan cerita skrip..."
+                  value={editTeamSynopsis}
+                  onChange={e => setEditTeamSynopsis(e.target.value)}
+                  className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500 font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    Nama Ketua / Pengarah
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nama ketua..."
+                    value={editTeamCaptainName}
+                    onChange={e => setEditTeamCaptainName(e.target.value)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    Status Kumpulan
+                  </label>
+                  <select
+                    value={editTeamStatus}
+                    onChange={e => setEditTeamStatus(e.target.value as TeamStatus)}
+                    className="w-full bg-neutral-950 border border-white/10 rounded-2xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="FORMING">FORMING (Sedang Membentuk)</option>
+                    <option value="READY">READY (Sedia)</option>
+                    <option value="LOCKED">LOCKED (Terkunci)</option>
+                    <option value="COMPLETED">COMPLETED (Selesai/Tamat)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowEditTeamModal(false)}
+                  className="px-5 py-2.5 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-400 text-xs font-bold uppercase border border-white/5 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {teamToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
           <div className="bg-neutral-900 border border-red-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full text-white space-y-6 shadow-2xl">

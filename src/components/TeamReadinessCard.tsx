@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Team, TeamReadinessChecklist } from '../types';
+import { Team, TeamReadinessChecklist, TeamStatus } from '../types';
 import { StatusBadge } from './StatusBadge';
+import { storage } from '../lib/storage';
 import { 
   Users, 
   Crown, 
@@ -12,7 +13,10 @@ import {
   Phone, 
   MessageCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Pencil,
+  X,
+  Save
 } from 'lucide-react';
 import { generateTeamCaptainWhatsAppLink } from '../lib/whatsapp';
 
@@ -20,6 +24,7 @@ interface TeamReadinessCardProps {
   team: Team;
   eventTitle?: string;
   onUpdateChecklist?: (teamId: string, checklist: TeamReadinessChecklist) => void;
+  onUpdateTeam?: (teamId: string, updates: Partial<Team>) => void;
   isAdmin?: boolean;
   onAssignMemberClick?: (teamId: string) => void;
 }
@@ -28,10 +33,20 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
   team,
   eventTitle = 'Pertandingan Teater KPMBP 2026',
   onUpdateChecklist,
+  onUpdateTeam,
   isAdmin = false,
   onAssignMemberClick
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Edit form state
+  const [editName, setEditName] = useState(team.name);
+  const [editPlayTitle, setEditPlayTitle] = useState(team.play_title || '');
+  const [editSynopsis, setEditSynopsis] = useState(team.synopsis || '');
+  const [editCaptainName, setEditCaptainName] = useState(team.captain_name || '');
+  const [editStatus, setEditStatus] = useState<TeamStatus>(team.status);
+  const [editMaxMembers, setEditMaxMembers] = useState(team.max_members || 5);
 
   const checklistItems = [
     { key: 'has_five_members', label: '5 Ahli Lengkap', value: team.members.length >= 5 },
@@ -58,21 +73,59 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
     onUpdateChecklist(team.id, updated);
   };
 
+  const handleOpenEdit = () => {
+    setEditName(team.name);
+    setEditPlayTitle(team.play_title || '');
+    setEditSynopsis(team.synopsis || '');
+    setEditCaptainName(team.captain_name || '');
+    setEditStatus(team.status);
+    setEditMaxMembers(team.max_members || 5);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editName.trim()) return;
+
+    const updates: Partial<Team> = {
+      name: editName.trim(),
+      play_title: editPlayTitle.trim() || undefined,
+      synopsis: editSynopsis.trim() || undefined,
+      captain_name: editCaptainName.trim() || undefined,
+      status: editStatus,
+      max_members: Number(editMaxMembers) || 5,
+      checklist: {
+        ...team.checklist,
+        has_title: Boolean(editPlayTitle.trim()),
+        has_storyline: Boolean(editSynopsis.trim()),
+        has_captain: Boolean(editCaptainName.trim()) || team.checklist.has_captain
+      }
+    };
+
+    if (onUpdateTeam) {
+      onUpdateTeam(team.id, updates);
+    } else {
+      storage.updateTeam(team.id, updates);
+    }
+
+    setShowEditModal(false);
+  };
+
   const captainPhone = team.members.find(m => m.is_captain || m.student_name === team.captain_name)?.student_phone;
 
   return (
-    <div className="bg-neutral-900 border border-white/10 hover:border-amber-500/40 rounded-3xl p-6 transition-all shadow-xl flex flex-col justify-between space-y-5">
+    <div className="bg-neutral-900 border border-white/10 hover:border-amber-500/40 rounded-3xl p-6 transition-all shadow-xl flex flex-col justify-between space-y-5 relative">
       <div>
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-neutral-800 text-amber-400 font-bold border border-white/5">
                 {team.code}
               </span>
               <StatusBadge status={team.status} />
             </div>
-            <h3 className="text-lg font-black uppercase text-white tracking-tight">
+            <h3 className="text-lg font-black uppercase text-white tracking-tight truncate">
               {team.name}
             </h3>
             {team.play_title ? (
@@ -86,9 +139,20 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-950 border border-white/5 text-neutral-300 text-xs font-mono">
-            <Users className="w-3.5 h-3.5 text-amber-400" />
-            <span>{team.members.length}/{team.max_members}</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Edit Button */}
+            <button
+              onClick={handleOpenEdit}
+              className="p-2 rounded-xl bg-neutral-800 hover:bg-amber-500/20 text-neutral-400 hover:text-amber-400 border border-white/5 hover:border-amber-500/30 transition-all cursor-pointer"
+              title="Edit Maklumat Pasukan & Tajuk Naskhah"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 border border-white/5 text-neutral-300 text-xs font-mono">
+              <Users className="w-3.5 h-3.5 text-amber-400" />
+              <span>{team.members.length}/{team.max_members}</span>
+            </div>
           </div>
         </div>
 
@@ -142,7 +206,7 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
       <div className="pt-3 border-t border-white/5 flex items-center justify-between gap-2">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs text-neutral-400 hover:text-white font-bold uppercase tracking-wider flex items-center gap-1"
+          className="text-xs text-neutral-400 hover:text-white font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer"
         >
           <span>{expanded ? 'Tutup Checklist' : 'Semak Checklist (10)'}</span>
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -183,6 +247,130 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
                 {item.value ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <AlertCircle className="w-4 h-4 text-neutral-600" />}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDIT PASUKAN & TAJUK NASKHAH */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl space-y-0">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-neutral-950">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Pencil className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black uppercase text-white tracking-tight">
+                    Edit Maklumat Pasukan
+                  </h3>
+                  <p className="text-xs text-neutral-400">
+                    Kemaskini tajuk naskhah, sinopsis, nama pasukan & status ({team.code})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="w-8 h-8 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body Form */}
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+              <div>
+                <label className="block text-xs font-mono uppercase text-neutral-400 mb-1 font-bold">
+                  Nama Pasukan / Kumpulan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  placeholder="Contoh: Pentas Sutera 26"
+                  className="w-full bg-neutral-950 border border-white/10 focus:border-amber-500 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-neutral-600 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase text-amber-400 mb-1 font-bold">
+                  Tajuk Persembahan / Naskhah Teater
+                </label>
+                <input
+                  type="text"
+                  value={editPlayTitle}
+                  onChange={e => setEditPlayTitle(e.target.value)}
+                  placeholder="Contoh: Mahkamah Keadilan, Atap Genting Atap Rumbia"
+                  className="w-full bg-neutral-950 border border-amber-500/30 focus:border-amber-500 rounded-2xl px-4 py-2.5 text-xs text-amber-300 placeholder-neutral-600 focus:outline-none"
+                />
+                <p className="text-[11px] text-neutral-500 mt-1">
+                  Tajuk lakonan yang akan dipaparkan di bawah nama kumpulan dan di laman utama.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase text-neutral-400 mb-1 font-bold">
+                  Sinopsis / Jalan Cerita Ringkas
+                </label>
+                <textarea
+                  rows={3}
+                  value={editSynopsis}
+                  onChange={e => setEditSynopsis(e.target.value)}
+                  placeholder="Tulis ringkasan plot atau mesej utama persembahan..."
+                  className="w-full bg-neutral-950 border border-white/10 focus:border-amber-500 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-neutral-600 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-mono uppercase text-neutral-400 mb-1 font-bold">
+                    Ketua Kumpulan (Captain)
+                  </label>
+                  <input
+                    type="text"
+                    value={editCaptainName}
+                    onChange={e => setEditCaptainName(e.target.value)}
+                    placeholder="Nama Ketua"
+                    className="w-full bg-neutral-950 border border-white/10 focus:border-amber-500 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-neutral-600 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono uppercase text-neutral-400 mb-1 font-bold">
+                    Status Pasukan
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={e => setEditStatus(e.target.value as TeamStatus)}
+                    className="w-full bg-neutral-950 border border-white/10 focus:border-amber-500 rounded-2xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none"
+                  >
+                    <option value="FORMING">FORMING (Membentuk)</option>
+                    <option value="READY">READY (Bersedia)</option>
+                    <option value="LOCKED">LOCKED (Terkunci)</option>
+                    <option value="COMPLETED">COMPLETED (Selesai/Tamat)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2.5 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

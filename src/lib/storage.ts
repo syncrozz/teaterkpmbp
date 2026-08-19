@@ -132,12 +132,22 @@ class StorageManager {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
       if (data) {
-        const parsed = JSON.parse(data) as AppStore;
-        if (!parsed.events || parsed.events.length < 2) {
-          parsed.events = INITIAL_EVENTS;
-          this.saveLocal(parsed, false);
-        }
-        return parsed;
+        const parsed = JSON.parse(data) as Partial<AppStore>;
+        const initial = getInitialStore();
+        return {
+          students: Array.isArray(parsed.students) ? parsed.students : initial.students,
+          events: Array.isArray(parsed.events) ? parsed.events : initial.events,
+          teams: Array.isArray(parsed.teams) ? parsed.teams : initial.teams,
+          team_preferences: Array.isArray(parsed.team_preferences) ? parsed.team_preferences : initial.team_preferences,
+          announcements: Array.isArray(parsed.announcements) ? parsed.announcements : initial.announcements,
+          opportunities: Array.isArray(parsed.opportunities) ? parsed.opportunities : initial.opportunities,
+          skills: Array.isArray(parsed.skills) ? parsed.skills : initial.skills,
+          sir_notes: Array.isArray(parsed.sir_notes) ? parsed.sir_notes : initial.sir_notes,
+          archives: Array.isArray(parsed.archives) ? parsed.archives : initial.archives,
+          bts: Array.isArray(parsed.bts) ? parsed.bts : initial.bts,
+          talents: Array.isArray(parsed.talents) ? parsed.talents : initial.talents,
+          calendar: Array.isArray(parsed.calendar) ? parsed.calendar : initial.calendar
+        };
       }
     } catch (e) {
       console.error('Error reading localStorage:', e);
@@ -187,73 +197,73 @@ class StorageManager {
       this.listenCollection<Student>('students', (remoteItems) => {
         this.store.students = remoteItems;
         this.saveLocal({ ...this.store, students: remoteItems });
-      }, INITIAL_STUDENTS);
+      });
 
       // 2. Events Sync
       this.listenCollection<TheatreEvent>('events', (remoteItems) => {
         this.store.events = remoteItems;
         this.saveLocal({ ...this.store, events: remoteItems });
-      }, INITIAL_EVENTS);
+      });
 
       // 3. Teams Sync
       this.listenCollection<Team>('teams', (remoteItems) => {
         this.store.teams = remoteItems;
         this.saveLocal({ ...this.store, teams: remoteItems });
-      }, INITIAL_TEAMS);
+      });
 
       // 4. Team Preferences Sync
       this.listenCollection<TeamPreference>('team_preferences', (remoteItems) => {
         this.store.team_preferences = remoteItems;
         this.saveLocal({ ...this.store, team_preferences: remoteItems });
-      }, getInitialStore().team_preferences);
+      });
 
       // 5. Announcements Sync
       this.listenCollection<Announcement>('announcements', (remoteItems) => {
         this.store.announcements = remoteItems;
         this.saveLocal({ ...this.store, announcements: remoteItems });
-      }, INITIAL_ANNOUNCEMENTS);
+      });
 
       // 6. Opportunities Sync
       this.listenCollection<Opportunity>('opportunities', (remoteItems) => {
         this.store.opportunities = remoteItems;
         this.saveLocal({ ...this.store, opportunities: remoteItems });
-      }, INITIAL_OPPORTUNITIES);
+      });
 
       // 7. Skills Academy Sync
       this.listenCollection<SkillLesson>('skills', (remoteItems) => {
         this.store.skills = remoteItems;
         this.saveLocal({ ...this.store, skills: remoteItems });
-      }, INITIAL_SKILLS);
+      });
 
       // 8. Sir's Notes Sync
       this.listenCollection<SirNote>('sir_notes', (remoteItems) => {
         this.store.sir_notes = remoteItems;
         this.saveLocal({ ...this.store, sir_notes: remoteItems });
-      }, INITIAL_SIR_NOTES);
+      });
 
       // 9. Archives Sync
       this.listenCollection<ArchiveRecord>('archives', (remoteItems) => {
         this.store.archives = remoteItems;
         this.saveLocal({ ...this.store, archives: remoteItems });
-      }, INITIAL_ARCHIVES);
+      });
 
       // 10. BTS Sync
       this.listenCollection<BehindTheScenesItem>('bts', (remoteItems) => {
         this.store.bts = remoteItems;
         this.saveLocal({ ...this.store, bts: remoteItems });
-      }, INITIAL_BTS);
+      });
 
       // 11. Talents Sync
       this.listenCollection<TalentProfile>('talents', (remoteItems) => {
         this.store.talents = remoteItems;
         this.saveLocal({ ...this.store, talents: remoteItems });
-      }, INITIAL_TALENTS);
+      });
 
       // 12. Calendar Sync
       this.listenCollection<CalendarEvent>('calendar', (remoteItems) => {
         this.store.calendar = remoteItems;
         this.saveLocal({ ...this.store, calendar: remoteItems });
-      }, INITIAL_CALENDAR);
+      });
 
     } catch (e) {
       console.warn('Firestore initialization notice:', e);
@@ -262,8 +272,7 @@ class StorageManager {
 
   private listenCollection<T extends { id: string }>(
     collectionName: string,
-    onUpdate: (items: T[]) => void,
-    defaultSeed: T[]
+    onUpdate: (items: T[]) => void
   ): void {
     const colRef = collection(db, collectionName);
 
@@ -273,20 +282,16 @@ class StorageManager {
         this.isFirebaseConnected = true;
         this.lastSyncedAt = new Date();
 
-        if (snapshot.empty && !this.seededCollections.has(collectionName)) {
-          // Auto-seed collection in Firestore on initial first run
-          this.seededCollections.add(collectionName);
-          this.seedCollection(collectionName, defaultSeed);
+        if (snapshot.empty) {
+          onUpdate([]);
           return;
         }
 
-        if (!snapshot.empty) {
-          const items: T[] = [];
-          snapshot.forEach((docSnap) => {
-            items.push(docSnap.data() as T);
-          });
-          onUpdate(items);
-        }
+        const items: T[] = [];
+        snapshot.forEach((docSnap) => {
+          items.push(docSnap.data() as T);
+        });
+        onUpdate(items);
       },
       (error) => {
         console.warn(`Firestore snapshot notice for [${collectionName}]:`, error.message);

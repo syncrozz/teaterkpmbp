@@ -82,7 +82,206 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 space-y-8 sm:space-y-12">
       
-      {/* 1. PRIMARY BENTO GRID HERO & ACTION SECTION */}
+      {/* 1. HERO ELEMENT: STATS KOMUNITI TEATER KPMBP */}
+      <section className="bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 rounded-3xl p-5 sm:p-7 border border-amber-500/30 shadow-2xl relative overflow-hidden space-y-5">
+        {/* Subtle Background Glow */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        
+        {/* Header with Live Pulse */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-black uppercase text-white tracking-tight">
+                  Stats Komuniti Teater
+                </h3>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  LIVE
+                </span>
+              </div>
+              <p className="text-xs text-neutral-400">
+                Papan pemuka perkembangan bakat & penyertaan aktif warga KPMBP
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNavigate('join')}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-red-950/40 active:scale-95 cursor-pointer"
+            >
+              <span>Daftar Minat</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 4 Interactive Hero Stat Cards - 3 Columns per card */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5 relative z-10">
+          {/* Stat 1: Pelajar Minat */}
+          <div 
+            onClick={() => setShowStudentListModal(true)}
+            className="bg-neutral-950/80 hover:bg-neutral-800/90 border border-white/5 hover:border-amber-500/40 rounded-2xl p-4 transition-all hover:-translate-y-0.5 cursor-pointer group shadow-lg grid grid-cols-3 items-center gap-2.5"
+            title="Klik untuk melihat senarai asas pelajar berdaftar (Nama Panggilan x Kumpulan x Status)"
+          >
+            {/* Col 1: Icon & Label */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform shrink-0">
+                <UserCheck className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono uppercase font-bold text-neutral-400 tracking-wider block truncate">
+                  Pelajar
+                </span>
+                <span className="text-[10px] text-neutral-500 block truncate">
+                  Minat
+                </span>
+              </div>
+            </div>
+
+            {/* Col 2: Metric */}
+            <div className="text-center">
+              <div className="text-2xl sm:text-3xl font-black text-amber-400 group-hover:text-amber-300 font-mono tracking-tight">
+                {studentsCount}
+              </div>
+            </div>
+
+            {/* Col 3: Subtext & Action Arrow */}
+            <div className="flex items-center justify-end gap-1.5 text-right">
+              <span className="text-[10px] font-medium text-neutral-400 group-hover:text-amber-400 transition-colors hidden sm:inline truncate">
+                Senarai
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-white/5 group-hover:bg-amber-500/20 flex items-center justify-center text-neutral-400 group-hover:text-amber-400 transition-all shrink-0">
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </div>
+
+          {/* Stat 2: Team Aktif */}
+          <div 
+            onClick={() => onNavigate('teams')}
+            className="bg-neutral-950/80 hover:bg-neutral-800/90 border border-white/5 hover:border-amber-500/40 rounded-2xl p-4 transition-all hover:-translate-y-0.5 cursor-pointer group shadow-lg grid grid-cols-3 items-center gap-2.5"
+            title="Klik untuk melihat senarai kumpulan aktif berdaftar"
+          >
+            {/* Col 1: Icon & Label */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono uppercase font-bold text-neutral-400 tracking-wider block truncate">
+                  Team
+                </span>
+                <span className="text-[10px] text-neutral-500 block truncate">
+                  Aktif
+                </span>
+              </div>
+            </div>
+
+            {/* Col 2: Metric */}
+            <div className="text-center">
+              <div className="text-2xl sm:text-3xl font-black text-white group-hover:text-amber-400 font-mono tracking-tight transition-colors">
+                {teamsCount}
+              </div>
+            </div>
+
+            {/* Col 3: Subtext & Action Arrow */}
+            <div className="flex items-center justify-end gap-1.5 text-right">
+              <span className="text-[10px] font-medium text-neutral-400 group-hover:text-amber-400 transition-colors hidden sm:inline truncate">
+                Casting
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-white/5 group-hover:bg-blue-500/20 flex items-center justify-center text-neutral-400 group-hover:text-amber-400 transition-all shrink-0">
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </div>
+
+          {/* Stat 3: Pentas Luar */}
+          <div 
+            onClick={() => onNavigate('opportunities')}
+            className="bg-neutral-950/80 hover:bg-neutral-800/90 border border-white/5 hover:border-red-500/40 rounded-2xl p-4 transition-all hover:-translate-y-0.5 cursor-pointer group shadow-lg grid grid-cols-3 items-center gap-2.5"
+            title="Klik untuk melihat peluang pentas & festival luar"
+          >
+            {/* Col 1: Icon & Label */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-2 rounded-xl bg-red-500/10 text-red-400 group-hover:scale-110 transition-transform shrink-0">
+                <Trophy className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono uppercase font-bold text-neutral-400 tracking-wider block truncate">
+                  Pentas
+                </span>
+                <span className="text-[10px] text-neutral-500 block truncate">
+                  Luar
+                </span>
+              </div>
+            </div>
+
+            {/* Col 2: Metric */}
+            <div className="text-center">
+              <div className="text-2xl sm:text-3xl font-black text-red-400 group-hover:text-red-300 font-mono tracking-tight">
+                {store.opportunities ? String(store.opportunities.length).padStart(2, '0') : '03'}
+              </div>
+            </div>
+
+            {/* Col 3: Subtext & Action Arrow */}
+            <div className="flex items-center justify-end gap-1.5 text-right">
+              <span className="text-[10px] font-medium text-neutral-400 group-hover:text-red-400 transition-colors hidden sm:inline truncate">
+                Acara
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-white/5 group-hover:bg-red-500/20 flex items-center justify-center text-neutral-400 group-hover:text-red-400 transition-all shrink-0">
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </div>
+
+          {/* Stat 4: WhatsApp Status */}
+          <div 
+            onClick={() => onNavigate('join')}
+            className="bg-neutral-950/80 hover:bg-neutral-800/90 border border-green-500/20 hover:border-green-500/50 rounded-2xl p-4 transition-all hover:-translate-y-0.5 cursor-pointer group shadow-lg grid grid-cols-3 items-center gap-2.5"
+            title="Klik untuk menyertai Komuniti WhatsApp Rasmi"
+          >
+            {/* Col 1: Icon & Label */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-2 rounded-xl bg-green-500/10 text-green-400 group-hover:scale-110 transition-transform shrink-0">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono uppercase font-bold text-green-400 tracking-wider block truncate">
+                  WhatsApp
+                </span>
+                <span className="text-[10px] text-neutral-500 block truncate">
+                  Komuniti
+                </span>
+              </div>
+            </div>
+
+            {/* Col 2: Status Indicator */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 font-bold text-[11px] font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+                <span>ONLINE</span>
+              </div>
+            </div>
+
+            {/* Col 3: Subtext & Action Arrow */}
+            <div className="flex items-center justify-end gap-1.5 text-right">
+              <span className="text-[10px] font-medium text-neutral-400 group-hover:text-green-400 transition-colors hidden sm:inline truncate">
+                Sertai
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-white/5 group-hover:bg-green-500/20 flex items-center justify-center text-neutral-400 group-hover:text-green-400 transition-all shrink-0">
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. PRIMARY BENTO GRID HERO & ACTION SECTION */}
       <section className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-5">
         
         {/* Bento Cell 1: Big Hero Welcome (Col 7 / 12) */}
@@ -164,10 +363,10 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* Bento Cell 2: Event Spotlight Carousel (Col 5 / 12) */}
         <EventSpotlightCarousel onNavigate={onNavigate} />
 
-        {/* Bento Cell 3: Skills Academy (Col 3 / 12) */}
+        {/* Bento Cell 3: Skills Academy (Col 6 / 12) */}
         <div 
           onClick={() => onNavigate('skills')}
-          className="md:col-span-3 bg-neutral-900/60 rounded-3xl p-6 border border-white/5 flex flex-col justify-between hover:border-amber-500/40 hover:bg-neutral-900 transition-all group cursor-pointer"
+          className="md:col-span-6 bg-neutral-900/60 rounded-3xl p-6 border border-white/5 flex flex-col justify-between hover:border-amber-500/40 hover:bg-neutral-900 transition-all group cursor-pointer"
         >
           <div>
             <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform">
@@ -180,7 +379,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
 
           <div>
-            <div className="w-full grid grid-cols-2 gap-2 mb-4">
+            <div className="w-full grid grid-cols-4 gap-2 mb-4">
               <span className="bg-neutral-800 p-2 rounded-xl text-[10px] font-bold uppercase text-center text-neutral-300">Acting</span>
               <span className="bg-neutral-800 p-2 rounded-xl text-[10px] font-bold uppercase text-center text-neutral-300">Script</span>
               <span className="bg-neutral-800 p-2 rounded-xl text-[10px] font-bold uppercase text-center text-neutral-300">Lighting</span>
@@ -248,67 +447,6 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 <p className="text-xs font-extrabold text-white leading-tight">Monolog Hati</p>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Bento Cell 5: Stats Komuniti (Col 3 / 12) */}
-        <div className="md:col-span-3 bg-neutral-900 rounded-3xl p-6 border border-amber-500/30 flex flex-col justify-between gap-4 shadow-xl">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-lg text-white">Stats Komuniti</h4>
-            <span className="text-xs text-amber-400 font-mono">LIVE</span>
-          </div>
-
-          <div className="space-y-3">
-            <div 
-              onClick={() => setShowStudentListModal(true)}
-              className="flex items-center justify-between border-b border-white/5 pb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-xl transition-all group"
-              title="Klik untuk melihat senarai asas pelajar berdaftar (Nama Panggilan x Kumpulan x Status)"
-            >
-              <div className="flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                <span className="text-neutral-300 group-hover:text-white text-xs font-semibold">Pelajar Minat</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-2xl font-black text-amber-400 group-hover:text-amber-300 transition-colors font-mono">{studentsCount}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-            <div 
-              onClick={() => onNavigate('teams')}
-              className="flex items-center justify-between border-b border-white/5 pb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-xl transition-all group"
-              title="Klik untuk melihat senarai kumpulan aktif berdaftar"
-            >
-              <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                <span className="text-neutral-300 group-hover:text-white text-xs font-semibold">Team Aktif</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-2xl font-black text-white group-hover:text-amber-400 transition-colors font-mono">{teamsCount}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-            <div 
-              onClick={() => onNavigate('opportunities')}
-              className="flex items-center justify-between cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-xl transition-all group"
-              title="Klik untuk melihat peluang pentas & festival luar"
-            >
-              <div className="flex items-center gap-1.5">
-                <Trophy className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition-transform" />
-                <span className="text-neutral-300 group-hover:text-white text-xs font-semibold">Pentas Luar</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-2xl font-black text-red-400 group-hover:text-red-300 transition-colors font-mono">{store.opportunities ? String(store.opportunities.length).padStart(2, '0') : '03'}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-          </div>
-
-          <div 
-            onClick={() => onNavigate('join')}
-            className="bg-green-500/10 hover:bg-green-500/20 text-green-400 p-3 rounded-2xl text-[10px] font-bold text-center border border-green-500/20 uppercase tracking-widest flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-          >
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span>WhatsApp Status: ONLINE</span>
           </div>
         </div>
 
