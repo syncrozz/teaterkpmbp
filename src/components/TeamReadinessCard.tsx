@@ -16,7 +16,12 @@ import {
   ChevronUp,
   Pencil,
   X,
-  Save
+  Save,
+  ShieldCheck,
+  ShieldAlert,
+  Lock,
+  Unlock,
+  KeyRound
 } from 'lucide-react';
 import { generateTeamCaptainWhatsAppLink } from '../lib/whatsapp';
 
@@ -39,6 +44,21 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Security Auth state (Session based)
+  const [isCaptainAuthorized, setIsCaptainAuthorized] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem(`auth_team_${team.id}`) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [captainIdInput, setCaptainIdInput] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccessMsg, setAuthSuccessMsg] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<'edit' | 'toggle' | 'markAll' | null>(null);
+  const [pendingToggleKey, setPendingToggleKey] = useState<keyof TeamReadinessChecklist | null>(null);
 
   // Edit form state
   const [editName, setEditName] = useState(team.name);
@@ -65,7 +85,7 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
   const totalPassed = checklistItems.filter(item => item.value).length;
   const progressPercent = Math.round((totalPassed / checklistItems.length) * 100);
 
-  const handleToggle = (key: keyof TeamReadinessChecklist) => {
+  const executeToggle = (key: keyof TeamReadinessChecklist) => {
     const updated: TeamReadinessChecklist = {
       ...team.checklist,
       [key]: !team.checklist[key]
@@ -77,7 +97,7 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
     }
   };
 
-  const handleMarkAllDone = () => {
+  const executeMarkAllDone = () => {
     const allDoneChecklist: TeamReadinessChecklist = {
       has_five_members: true,
       has_captain: true,
@@ -97,7 +117,37 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
     }
   };
 
+  const handleToggle = (key: keyof TeamReadinessChecklist) => {
+    if (!isAdmin && !isCaptainAuthorized) {
+      setPendingAction('toggle');
+      setPendingToggleKey(key);
+      setAuthError(null);
+      setCaptainIdInput('');
+      setShowAuthModal(true);
+      return;
+    }
+    executeToggle(key);
+  };
+
+  const handleMarkAllDone = () => {
+    if (!isAdmin && !isCaptainAuthorized) {
+      setPendingAction('markAll');
+      setAuthError(null);
+      setCaptainIdInput('');
+      setShowAuthModal(true);
+      return;
+    }
+    executeMarkAllDone();
+  };
+
   const handleResetChecklist = () => {
+    if (!isAdmin && !isCaptainAuthorized) {
+      setPendingAction('toggle');
+      setAuthError(null);
+      setCaptainIdInput('');
+      setShowAuthModal(true);
+      return;
+    }
     const resetChecklist: TeamReadinessChecklist = {
       has_five_members: team.members.length >= 5,
       has_captain: Boolean(team.captain_name) || team.members.some(m => m.is_captain),
@@ -117,7 +167,7 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
     }
   };
 
-  const handleOpenEdit = () => {
+  const openEditModalDirectly = () => {
     setEditName(team.name);
     setEditPlayTitle(team.play_title || '');
     setEditSynopsis(team.synopsis || '');
@@ -126,6 +176,106 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
     setEditMaxMembers(team.max_members || 5);
     setEditChecklist({ ...team.checklist });
     setShowEditModal(true);
+  };
+
+  const handleOpenEdit = () => {
+    if (isAdmin || isCaptainAuthorized) {
+      openEditModalDirectly();
+    } else {
+      setPendingAction('edit');
+      setAuthError(null);
+      setCaptainIdInput('');
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleVerifyCaptain = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanInput = captainIdInput.trim().toUpperCase();
+    if (!cleanInput) {
+      setAuthError('Sila masukkan No. ID Pelajar / No. Matrik Ketua.');
+      return;
+    }
+
+    // 1. Admin Master Bypass
+    if (cleanInput === 'ADMIN' || cleanInput === 'SIR HELMI' || cleanInput === 'TEATERKPMBP') {
+      grantAccess('Admin / Pegawai KPMBP');
+      return;
+    }
+
+    // 2. Check team captain_id or member student_id match
+    const directCaptainMatch = (team.captain_id || '').trim().toUpperCase() === cleanInput;
+    const memberMatch = team.members.find(m => (m.student_id || '').trim().toUpperCase() === cleanInput);
+
+    if (directCaptainMatch || memberMatch) {
+      const verifiedName = memberMatch?.student_name || team.captain_name || 'Ketua Pasukan';
+      grantAccess(verifiedName);
+      return;
+    }
+
+    // 3. Search storage students database
+    const allStudents = storage.getStudents();
+    const student = allStudents.find(s => 
+      (s.student_id && s.student_id.trim().toUpperCase() === cleanInput) ||
+      (s.id && s.id.trim().toUpperCase() === cleanInput)
+    );
+
+    if (student) {
+      const studentNameNorm = student.full_name.trim().toLowerCase();
+      const captainNameNorm = (team.captain_name || '').trim().toLowerCase();
+
+      const isCaptainOrMember = Boolean(
+        (captainNameNorm && (studentNameNorm.includes(captainNameNorm) || captainNameNorm.includes(studentNameNorm))) ||
+        student.assigned_team_id === team.id ||
+        team.members.some(m => m.student_name.trim().toLowerCase() === studentNameNorm || m.student_id === student.id || m.student_id === student.student_id)
+      );
+
+      if (isCaptainOrMember) {
+        grantAccess(student.full_name);
+        return;
+      }
+    }
+
+    // 4. Specific combination rule for Khair Danish & HOMEROOM SIR HELMI
+    if (cleanInput === 'PDA2602032') {
+      const teamNameNorm = team.name.toLowerCase();
+      const captainNorm = (team.captain_name || '').toLowerCase();
+      if (teamNameNorm.includes('helmi') || captainNorm.includes('khair') || captainNorm.includes('danish') || team.code.includes('HSH') || team.code === 'HSH-04') {
+        grantAccess('Khair Danish (Ketua Homeroom Sir Helmi)');
+        return;
+      }
+    }
+
+    const captainNameDisplay = team.captain_name || 'Ketua Pasukan';
+    setAuthError(`No. ID "${captainIdInput.trim()}" tidak sepadan dengan rekod Ketua Pasukan (${captainNameDisplay}) bagi kumpulan ${team.name}. Sila masukkan No. ID yang sah.`);
+  };
+
+  const grantAccess = (name: string) => {
+    setIsCaptainAuthorized(true);
+    try {
+      sessionStorage.setItem(`auth_team_${team.id}`, 'true');
+    } catch {}
+    setAuthSuccessMsg(`Akses Disahkan: ${name}`);
+    setTimeout(() => {
+      setShowAuthModal(false);
+      setAuthSuccessMsg(null);
+      if (pendingAction === 'edit' || !pendingAction) {
+        openEditModalDirectly();
+      } else if (pendingAction === 'toggle' && pendingToggleKey) {
+        executeToggle(pendingToggleKey);
+      } else if (pendingAction === 'markAll') {
+        executeMarkAllDone();
+      }
+      setPendingAction(null);
+      setPendingToggleKey(null);
+    }, 600);
+  };
+
+  const handleLockSession = () => {
+    setIsCaptainAuthorized(false);
+    try {
+      sessionStorage.removeItem(`auth_team_${team.id}`);
+    } catch {}
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
@@ -174,6 +324,12 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
                 {team.code}
               </span>
               <StatusBadge status={team.status} />
+              {isCaptainAuthorized && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-mono px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 font-bold border border-green-500/30">
+                  <Unlock className="w-2.5 h-2.5" />
+                  Akses Ketua Dibuka
+                </span>
+              )}
             </div>
             <h3 className="text-lg font-black uppercase text-white tracking-tight truncate">
               {team.name}
@@ -190,14 +346,32 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Edit Button */}
+            {/* Edit Button with Captain Security */}
             <button
               onClick={handleOpenEdit}
-              className="p-2 rounded-xl bg-neutral-800 hover:bg-amber-500/20 text-neutral-400 hover:text-amber-400 border border-white/5 hover:border-amber-500/30 transition-all cursor-pointer"
-              title="Edit Maklumat Pasukan & Tajuk Naskhah"
+              className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                isCaptainAuthorized || isAdmin
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500 hover:text-neutral-950'
+                  : 'bg-neutral-800 hover:bg-amber-500/20 text-neutral-400 hover:text-amber-400 border-white/5 hover:border-amber-500/30'
+              }`}
+              title={
+                isCaptainAuthorized || isAdmin
+                  ? 'Edit Maklumat Pasukan & Tajuk Naskhah (Akses Disahkan)'
+                  : 'Edit Maklumat Pasukan (Sahkan No. ID Ketua)'
+              }
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
+
+            {isCaptainAuthorized && !isAdmin && (
+              <button
+                onClick={handleLockSession}
+                className="p-2 rounded-xl bg-neutral-800 hover:bg-red-500/20 text-neutral-400 hover:text-red-400 border border-white/5 transition-all cursor-pointer"
+                title="Kunci semula akses ketua"
+              >
+                <Lock className="w-3.5 h-3.5" />
+              </button>
+            )}
 
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 border border-white/5 text-neutral-300 text-xs font-mono">
               <Users className="w-3.5 h-3.5 text-amber-400" />
@@ -522,6 +696,123 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PENGESAHAN KESELAMATAN KETUA / PENGARAH PASUKAN */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-neutral-900 border border-amber-500/30 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl space-y-0 text-white">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-neutral-950">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black uppercase text-white tracking-tight">
+                    Pengesahan Akses Ketua
+                  </h3>
+                  <p className="text-xs text-amber-400/90 font-mono">
+                    {team.name} ({team.code})
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAuthModal(false);
+                  setAuthError(null);
+                  setPendingAction(null);
+                }}
+                className="w-8 h-8 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleVerifyCaptain} className="p-6 space-y-4 font-mono text-xs">
+              <div className="bg-neutral-950 p-3.5 rounded-2xl border border-white/5 space-y-1.5 font-sans">
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
+                  <ShieldCheck className="w-4 h-4 shrink-0" />
+                  <span>Kawalan Keselamatan Produksi</span>
+                </div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                  Bagi mengelakkan perubahan tanpa kebenaran, sila masukkan <strong className="text-white">No. ID Pelajar / No. Matrik Ketua Pasukan</strong> untuk membuka akses suntingan dan checklist kumpulan ini.
+                </p>
+                {team.captain_name && (
+                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+                    <span className="text-neutral-500">Ketua Berdaftar:</span>
+                    <span className="text-amber-300 font-bold">{team.captain_name}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5 font-mono">
+                <label className="block text-neutral-300 font-bold uppercase text-[11px]">
+                  No. ID Pelajar / Matrik Ketua *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    value={captainIdInput}
+                    onChange={e => {
+                      setCaptainIdInput(e.target.value);
+                      if (authError) setAuthError(null);
+                    }}
+                    placeholder="Contoh: PDA2602032"
+                    className="w-full bg-neutral-950 border border-white/15 focus:border-amber-500 rounded-2xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none uppercase font-bold tracking-wider"
+                  />
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-neutral-500 font-sans">
+                  Masukkan ID matrik ketua (cth: <strong>PDA2602032</strong> untuk Khair Danish)
+                </p>
+              </div>
+
+              {authError && (
+                <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2.5 font-sans animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <div className="leading-relaxed text-[11px]">
+                    {authError}
+                  </div>
+                </div>
+              )}
+
+              {authSuccessMsg && (
+                <div className="p-3 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-300 text-xs flex items-center gap-2.5 font-sans animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                  <span className="font-bold">{authSuccessMsg}</span>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3 font-sans">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAuthModal(false);
+                    setAuthError(null);
+                    setPendingAction(null);
+                  }}
+                  className="px-4 py-2.5 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-lg shadow-amber-500/20 cursor-pointer active:scale-95"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Sahkan & Buka Akses</span>
                 </button>
               </div>
             </form>

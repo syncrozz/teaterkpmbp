@@ -216,6 +216,26 @@ export const INITIAL_STUDENTS: Student[] = [
     assigned_team_id: 'team-01',
     created_at: '2026-08-08T14:10:00Z',
     updated_at: '2026-08-11T17:00:00Z'
+  },
+  {
+    id: 'std-006',
+    full_name: 'Khair Danish',
+    nickname: 'Khair',
+    student_id: 'PDA2602032',
+    programme: 'Diploma in Digital Arts & Media (PDA)',
+    class_name: 'PDA 2A',
+    semester: 2,
+    phone: '0189988776',
+    email: 'khair.danish@student.kpmbp.edu.my',
+    interests: ['Pengarah', 'Lakonan', 'Sinografi & Skrip'],
+    experience_level: 'Berpengalaman',
+    motivation: 'Pengarah kumpulan Homeroom Sir Helmi untuk pementasan teater KPMBP.',
+    group_status: 'Sudah mempunyai kumpulan',
+    status: 'JOINED',
+    consent: true,
+    assigned_team_id: 'team-04',
+    created_at: '2026-08-10T10:00:00Z',
+    updated_at: '2026-08-15T12:00:00Z'
   }
 ];
 
@@ -244,8 +264,8 @@ export const INITIAL_TEAMS: Team[] = [
       rehearsal_started: true
     },
     members: [
-      { id: 'm-1', team_id: 'team-01', student_id: 'std-001', student_name: 'Muhammad Amirul Hafiz', student_phone: '0112345678', role: 'Pengarah & Pelakon Utama', is_captain: true, joined_at: '2026-08-03' },
-      { id: 'm-2', team_id: 'team-01', student_id: 'std-005', student_name: 'Syed Imran Bin Syed Ahmad', student_phone: '0123344556', role: 'Penulis Skrip & Pelakon', joined_at: '2026-08-04' },
+      { id: 'm-1', team_id: 'team-01', student_id: 'DIT23014', student_name: 'Muhammad Amirul Hafiz', student_phone: '0112345678', role: 'Pengarah & Pelakon Utama', is_captain: true, joined_at: '2026-08-03' },
+      { id: 'm-2', team_id: 'team-01', student_id: 'DEB23022', student_name: 'Syed Imran Bin Syed Ahmad', student_phone: '0123344556', role: 'Penulis Skrip & Pelakon', joined_at: '2026-08-04' },
       { id: 'm-3', team_id: 'team-01', student_id: 'std-demo-3', student_name: 'Haziq Najmi', role: 'Pelakon Pembantu', joined_at: '2026-08-05' },
       { id: 'm-4', team_id: 'team-01', student_id: 'std-demo-4', student_name: 'Nurin Athirah', role: 'Props & Pelakon', joined_at: '2026-08-06' },
       { id: 'm-5', team_id: 'team-01', student_id: 'std-demo-5', student_name: 'Ahmad Faiz', role: 'Pengurus Pentas (Stage Manager)', joined_at: '2026-08-07' }
@@ -277,7 +297,7 @@ export const INITIAL_TEAMS: Team[] = [
       rehearsal_started: false
     },
     members: [
-      { id: 'm-6', team_id: 'team-02', student_id: 'std-002', student_name: 'Nur Aisyah Binti Zulkifli', student_phone: '0139876543', role: 'Penulis Skrip & Kapten', is_captain: true, joined_at: '2026-08-08' },
+      { id: 'm-6', team_id: 'team-02', student_id: 'DIA24009', student_name: 'Nur Aisyah Binti Zulkifli', student_phone: '0139876543', role: 'Penulis Skrip & Kapten', is_captain: true, joined_at: '2026-08-08' },
       { id: 'm-7', team_id: 'team-02', student_id: 'std-demo-7', student_name: 'Khairul Anwar', role: 'Pelakon Watak Utama', joined_at: '2026-08-09' },
       { id: 'm-8', team_id: 'team-02', student_id: 'std-demo-8', student_name: 'Siti Sarah', role: 'Kostum & Pelakon', joined_at: '2026-08-10' }
     ],
@@ -312,6 +332,39 @@ export const INITIAL_TEAMS: Team[] = [
     ],
     notes: 'Terbuka untuk 3 orang ahli baharu.',
     created_at: '2026-08-11T12:00:00Z'
+  },
+  {
+    id: 'team-04',
+    event_id: 'event-kpmbp-2026',
+    name: 'HOMEROOM SIR HELMI',
+    code: 'HSH-04',
+    captain_id: 'PDA2602032',
+    captain_name: 'Khair Danish',
+    play_title: 'Sinar Di Balik Tirai Pentas',
+    synopsis: 'Karya persembahan teater penuh inspirasi daripada anak-anak muda Homeroom Sir Helmi.',
+    status: 'FORMING',
+    max_members: 5,
+    checklist: {
+      has_five_members: true,
+      has_captain: true,
+      has_title: true,
+      has_storyline: true,
+      has_character_split: false,
+      has_script: false,
+      has_props: false,
+      has_costume: false,
+      has_technical_req: false,
+      rehearsal_started: false
+    },
+    members: [
+      { id: 'm-11', team_id: 'team-04', student_id: 'PDA2602032', student_name: 'Khair Danish', student_phone: '0189988776', role: 'Ketua / Pengarah & Pelakon', is_captain: true, joined_at: '2026-08-10' },
+      { id: 'm-12', team_id: 'team-04', student_id: 'PDA2602033', student_name: 'Muhammad Adam', role: 'Penulis Skrip & Pelakon', joined_at: '2026-08-10' },
+      { id: 'm-13', team_id: 'team-04', student_id: 'PDA2602034', student_name: 'Nur Irdina', role: 'Pengurus Pentas', joined_at: '2026-08-11' },
+      { id: 'm-14', team_id: 'team-04', student_id: 'PDA2602035', student_name: 'Ahmad Daniel', role: 'Audio & Lighting', joined_at: '2026-08-11' },
+      { id: 'm-15', team_id: 'team-04', student_id: 'PDA2602036', student_name: 'Siti Sarah', role: 'Kostum & Props', joined_at: '2026-08-12' }
+    ],
+    notes: 'Kumpulan Homeroom Sir Helmi pimpinan Khair Danish.',
+    created_at: '2026-08-10T10:00:00Z'
   }
 ];
 
