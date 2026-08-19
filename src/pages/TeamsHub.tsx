@@ -160,17 +160,17 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12 space-y-8 w-full overflow-x-hidden">
       
       {/* Top Bento Row: 8-col Header + 4-col Team Readiness Metric Bento Card */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-        <div className="md:col-span-8 bg-neutral-900 border border-white/10 rounded-3xl p-6 sm:p-8 flex flex-col justify-between space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch w-full">
+        <div className="lg:col-span-8 bg-neutral-900 border border-white/10 rounded-3xl p-5 sm:p-7 md:p-8 flex flex-col justify-between space-y-6 min-w-0">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-mono font-bold uppercase tracking-widest">
-              <Users className="w-3.5 h-3.5" />
+              <Users className="w-3.5 h-3.5 shrink-0" />
               KOMUNITI & CASTING HUB TEATER KPMBP
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black uppercase text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase text-white tracking-tight">
               Kumpulan Aktif Berdaftar
             </h1>
             <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
@@ -178,31 +178,31 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-            <div className="p-3.5 bg-neutral-950 rounded-2xl border border-white/5 space-y-1">
-              <span className="text-[10px] font-mono uppercase text-neutral-400">Total Kumpulan</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-2">
+            <div className="p-3.5 bg-neutral-950 rounded-2xl border border-white/5 space-y-1 min-w-0">
+              <span className="text-[10px] font-mono uppercase text-neutral-400 block truncate">Total Kumpulan</span>
               <p className="text-sm font-bold text-white flex items-center gap-1.5">
                 <span className="text-amber-400 font-mono text-base">{allTeams.length}</span> Pasukan
               </p>
             </div>
-            <div className="p-3.5 bg-neutral-950 rounded-2xl border border-white/5 space-y-1">
-              <span className="text-[10px] font-mono uppercase text-neutral-400">Pasukan Ready</span>
+            <div className="p-3.5 bg-neutral-950 rounded-2xl border border-white/5 space-y-1 min-w-0">
+              <span className="text-[10px] font-mono uppercase text-neutral-400 block truncate">Pasukan Ready</span>
               <p className="text-sm font-bold text-green-400 flex items-center gap-1.5">
-                <CheckCheck className="w-4 h-4" />
+                <CheckCheck className="w-4 h-4 shrink-0" />
                 <span className="font-mono text-base">{readyTeamsCount}</span> Siap Pentas
               </p>
             </div>
-            <div className="p-3.5 bg-neutral-950 rounded-2xl border border-white/5 space-y-1">
-              <span className="text-[10px] font-mono uppercase text-neutral-400">Pelajar Dalam Pasukan</span>
+            <div className="p-3.5 bg-neutral-950 rounded-2xl border border-white/5 space-y-1 min-w-0">
+              <span className="text-[10px] font-mono uppercase text-neutral-400 block truncate">Pelajar Pasukan</span>
               <p className="text-sm font-bold text-amber-400 flex items-center gap-1.5">
-                <Users className="w-4 h-4" />
+                <Users className="w-4 h-4 shrink-0" />
                 <span className="font-mono text-base">{totalMembersCount}</span> Pelajar
               </p>
             </div>
           </div>
         </div>
 
-        <div className="md:col-span-4 bg-gradient-to-br from-amber-500 to-amber-700 text-neutral-950 rounded-3xl p-6 sm:p-7 flex flex-col justify-between shadow-xl space-y-6">
+        <div className="lg:col-span-4 bg-gradient-to-br from-amber-500 to-amber-700 text-neutral-950 rounded-3xl p-5 sm:p-7 flex flex-col justify-between shadow-xl space-y-6 min-w-0">
           <div className="flex items-start justify-between">
             <span className="text-[10px] font-mono uppercase font-black tracking-widest text-neutral-900/80">
               STATUS KOMUNITI
@@ -273,12 +273,12 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
           </div>
 
           {/* Search bar & Filter Pills */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-white/5">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2 border-t border-white/5">
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 bg-neutral-950 p-1 rounded-2xl border border-white/5 w-full sm:w-auto">
+            <div className="flex items-center gap-1.5 bg-neutral-950 p-1 rounded-2xl border border-white/5 w-full md:w-auto overflow-x-auto">
               <button
                 onClick={() => setStatusFilter('ALL')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                   statusFilter === 'ALL'
                     ? 'bg-amber-500 text-neutral-950 shadow'
                     : 'text-neutral-400 hover:text-white'
@@ -288,7 +288,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
               </button>
               <button
                 onClick={() => setStatusFilter('READY')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 whitespace-nowrap ${
                   statusFilter === 'READY'
                     ? 'bg-green-500 text-neutral-950 shadow'
                     : 'text-neutral-400 hover:text-white'
@@ -299,7 +299,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
               </button>
               <button
                 onClick={() => setStatusFilter('FORMING')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 whitespace-nowrap ${
                   statusFilter === 'FORMING'
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                     : 'text-neutral-400 hover:text-white'
@@ -311,7 +311,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
             </div>
 
             {/* Search input */}
-            <div className="relative w-full sm:w-72">
+            <div className="relative w-full md:w-72">
               <Search className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -334,7 +334,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
 
         {/* Team Cards Grid (Always visible by default) */}
         {filteredTeams.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 w-full">
             {filteredTeams.map(team => (
               <TeamReadinessCard
                 key={team.id}
