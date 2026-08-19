@@ -47,6 +47,7 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
   const [editCaptainName, setEditCaptainName] = useState(team.captain_name || '');
   const [editStatus, setEditStatus] = useState<TeamStatus>(team.status);
   const [editMaxMembers, setEditMaxMembers] = useState(team.max_members || 5);
+  const [editChecklist, setEditChecklist] = useState<TeamReadinessChecklist>(team.checklist);
 
   const checklistItems = [
     { key: 'has_five_members', label: '5 Ahli Lengkap', value: team.members.length >= 5 },
@@ -65,12 +66,55 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
   const progressPercent = Math.round((totalPassed / checklistItems.length) * 100);
 
   const handleToggle = (key: keyof TeamReadinessChecklist) => {
-    if (!isAdmin || !onUpdateChecklist) return;
-    const updated = {
+    const updated: TeamReadinessChecklist = {
       ...team.checklist,
       [key]: !team.checklist[key]
     };
-    onUpdateChecklist(team.id, updated);
+    if (onUpdateChecklist) {
+      onUpdateChecklist(team.id, updated);
+    } else {
+      storage.updateTeamChecklist(team.id, updated);
+    }
+  };
+
+  const handleMarkAllDone = () => {
+    const allDoneChecklist: TeamReadinessChecklist = {
+      has_five_members: true,
+      has_captain: true,
+      has_title: true,
+      has_storyline: true,
+      has_character_split: true,
+      has_script: true,
+      has_props: true,
+      has_costume: true,
+      has_technical_req: true,
+      rehearsal_started: true
+    };
+    if (onUpdateChecklist) {
+      onUpdateChecklist(team.id, allDoneChecklist);
+    } else {
+      storage.updateTeamChecklist(team.id, allDoneChecklist);
+    }
+  };
+
+  const handleResetChecklist = () => {
+    const resetChecklist: TeamReadinessChecklist = {
+      has_five_members: team.members.length >= 5,
+      has_captain: Boolean(team.captain_name) || team.members.some(m => m.is_captain),
+      has_title: Boolean(team.play_title),
+      has_storyline: Boolean(team.synopsis),
+      has_character_split: false,
+      has_script: false,
+      has_props: false,
+      has_costume: false,
+      has_technical_req: false,
+      rehearsal_started: false
+    };
+    if (onUpdateChecklist) {
+      onUpdateChecklist(team.id, resetChecklist);
+    } else {
+      storage.updateTeamChecklist(team.id, resetChecklist);
+    }
   };
 
   const handleOpenEdit = () => {
@@ -80,6 +124,7 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
     setEditCaptainName(team.captain_name || '');
     setEditStatus(team.status);
     setEditMaxMembers(team.max_members || 5);
+    setEditChecklist({ ...team.checklist });
     setShowEditModal(true);
   };
 
@@ -87,19 +132,24 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
     e.preventDefault();
     if (!editName.trim()) return;
 
+    const mergedChecklist: TeamReadinessChecklist = {
+      ...editChecklist,
+      has_title: Boolean(editPlayTitle.trim()) || editChecklist.has_title,
+      has_storyline: Boolean(editSynopsis.trim()) || editChecklist.has_storyline,
+      has_captain: Boolean(editCaptainName.trim()) || editChecklist.has_captain
+    };
+
+    const hasAll = Object.values(mergedChecklist).every(v => v === true);
+    const finalStatus: TeamStatus = hasAll ? 'READY' : editStatus;
+
     const updates: Partial<Team> = {
       name: editName.trim(),
       play_title: editPlayTitle.trim() || undefined,
       synopsis: editSynopsis.trim() || undefined,
       captain_name: editCaptainName.trim() || undefined,
-      status: editStatus,
+      status: finalStatus,
       max_members: Number(editMaxMembers) || 5,
-      checklist: {
-        ...team.checklist,
-        has_title: Boolean(editPlayTitle.trim()),
-        has_storyline: Boolean(editSynopsis.trim()),
-        has_captain: Boolean(editCaptainName.trim()) || team.checklist.has_captain
-      }
+      checklist: mergedChecklist
     };
 
     if (onUpdateTeam) {
@@ -227,25 +277,72 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
 
       {/* Expanded Checklist details */}
       {expanded && (
-        <div className="pt-3 border-t border-white/5 space-y-2 text-xs">
-          <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400">
-            <span>10 Perkara Kesediaan:</span>
-            {isAdmin && <span className="text-amber-400 font-sans font-bold">(Klik untuk tanda)</span>}
+        <div className="pt-3 border-t border-white/5 space-y-3 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-neutral-950/80 p-3 rounded-2xl border border-white/5">
+            <div>
+              <span className="text-[10px] font-mono uppercase text-neutral-400 font-bold block">
+                10 Perkara Kesediaan Produksi
+              </span>
+              <span className="text-[11px] text-amber-400">
+                Klik mana-mana perkara di bawah untuk tanda selesai (DONE)
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={handleMarkAllDone}
+                className="px-2.5 py-1 rounded-xl bg-green-500 hover:bg-green-400 text-neutral-950 text-[10px] font-mono font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow"
+                title="Tandakan kesemua 10 perkara sebagai selesai"
+              >
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Tanda Semua Selesai</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleResetChecklist}
+                className="px-2.5 py-1 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer"
+                title="Tetapkan semula checklist"
+              >
+                <span>Reset</span>
+              </button>
+            </div>
           </div>
+
           <div className="grid grid-cols-1 gap-1.5">
-            {checklistItems.map(item => (
-              <div
+            {checklistItems.map((item, idx) => (
+              <button
+                type="button"
                 key={item.key}
                 onClick={() => handleToggle(item.key as keyof TeamReadinessChecklist)}
-                className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
+                className={`w-full text-left flex items-center justify-between p-2.5 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.99] ${
                   item.value
-                    ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                    : 'bg-neutral-950 border-white/5 text-neutral-400'
-                } ${isAdmin ? 'cursor-pointer hover:border-amber-500/40' : ''}`}
+                    ? 'bg-green-500/10 border-green-500/30 text-green-300 hover:bg-green-500/20'
+                    : 'bg-neutral-950/80 border-white/5 text-neutral-400 hover:border-amber-500/40 hover:text-white'
+                }`}
               >
-                <span>{item.label}</span>
-                {item.value ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <AlertCircle className="w-4 h-4 text-neutral-600" />}
-              </div>
+                <div className="flex items-center gap-2 min-w-0 pr-2">
+                  <span className="font-mono text-[10px] text-neutral-500 shrink-0">
+                    {idx + 1}.
+                  </span>
+                  <span className={`text-xs ${item.value ? 'font-bold text-white' : ''}`}>
+                    {item.label}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {item.value ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-green-500/20 text-green-400 font-mono text-[10px] font-bold border border-green-500/30">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>SELESAI</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-neutral-900 text-neutral-500 font-mono text-[10px] border border-white/5 group-hover:text-neutral-300">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span>BELUM</span>
+                    </span>
+                  )}
+                </div>
+              </button>
             ))}
           </div>
         </div>
@@ -351,6 +448,63 @@ export const TeamReadinessCard: React.FC<TeamReadinessCardProps> = ({
                     <option value="LOCKED">LOCKED (Terkunci)</option>
                     <option value="COMPLETED">COMPLETED (Selesai/Tamat)</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Checklist items inside Modal */}
+              <div className="space-y-2 pt-2 border-t border-white/10">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-mono uppercase text-neutral-300 font-bold">
+                    10 Perkara Kesediaan Produksi (Tanda Siap)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditChecklist({
+                        has_five_members: true,
+                        has_captain: true,
+                        has_title: true,
+                        has_storyline: true,
+                        has_character_split: true,
+                        has_script: true,
+                        has_props: true,
+                        has_costume: true,
+                        has_technical_req: true,
+                        rehearsal_started: true
+                      });
+                    }}
+                    className="text-[10px] text-green-400 hover:text-green-300 font-mono font-bold uppercase underline cursor-pointer"
+                  >
+                    Tanda Semua Siap
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto p-1 bg-neutral-950 rounded-2xl border border-white/5">
+                  {checklistItems.map(item => {
+                    const isChecked = editChecklist[item.key as keyof TeamReadinessChecklist];
+                    return (
+                      <label
+                        key={item.key}
+                        className={`flex items-center gap-2 p-2 rounded-xl border text-xs cursor-pointer select-none transition-all ${
+                          isChecked
+                            ? 'bg-green-500/10 border-green-500/30 text-green-300 font-medium'
+                            : 'bg-neutral-900 border-white/5 text-neutral-400 hover:border-white/20'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(isChecked)}
+                          onChange={e => {
+                            setEditChecklist(prev => ({
+                              ...prev,
+                              [item.key]: e.target.checked
+                            }));
+                          }}
+                          className="w-4 h-4 rounded text-amber-500 bg-neutral-950 border-white/10 focus:ring-0 cursor-pointer"
+                        />
+                        <span className="truncate">{item.label}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 

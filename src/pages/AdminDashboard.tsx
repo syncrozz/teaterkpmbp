@@ -2666,8 +2666,8 @@ export const AdminDashboard: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Contoh: Menanti Di Gerbang Senja"
-                  value={editPlayTitle}
-                  onChange={e => setEditPlayTitle(e.target.value)}
+                  value={editTeamPlayTitle}
+                  onChange={e => setEditTeamPlayTitle(e.target.value)}
                   className="w-full bg-neutral-950 border border-amber-500/30 rounded-2xl px-4 py-2.5 text-amber-300 placeholder-neutral-600 focus:outline-none focus:border-amber-500"
                 />
               </div>
