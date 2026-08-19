@@ -901,3 +901,38 @@ export const INITIAL_CALENDAR: CalendarEvent[] = [
     target_audience: 'Warga KPMBP, Pensyarah & Pelajar'
   }
 ];
+
+export const INITIAL_MENTOR_TIPS = [
+  {
+    id: 'tip-01',
+    tag: 'AMANAT PENASIHAT',
+    quote: '«Sir bukan menentukan semua perkara. Tugas saya membina ruang selamat untuk anda berani beraksi. Keputusan artistik terakhir tetap di tangan pelajar!»',
+    author: '— Sir Penasihat Seni Teater KPMBP',
+    subtext: 'Sentiasa terbuka untuk sesi bimbingan skrip & lakonan secara bersemuka atau WhatsApp.',
+    created_at: '2026-08-10T10:00:00Z'
+  },
+  {
+    id: 'tip-02',
+    tag: 'PETUA PENTAS & PENGUCAPAN',
+    quote: '«Jangan hafal skrip perkataan demi perkataan semata-mata; selami objektif emosi watak anda. Lontaran suara yang berkesan lahir dari kefahaman jalan cerita.»',
+    author: '— Sir Penasihat Seni Teater KPMBP',
+    subtext: 'Lakukan warm-up artikulasi dan pernafasan diafragma 15 minit sebelum pementasan.',
+    created_at: '2026-08-12T10:00:00Z'
+  },
+  {
+    id: 'tip-03',
+    tag: 'DINAMIKA ENSEMBEL',
+    quote: '«Teater adalah kerja berpasukan yang utuh. Tiada watak yang kecil — tenaga di atas dan di belakang tabir saling menghidupkan magis karya pentas.»',
+    author: '— Sir Penasihat Seni Teater KPMBP',
+    subtext: 'Hargai krew teknikal, pengurus pentas, dan jurusolek seperti anda menghargai watak utama.',
+    created_at: '2026-08-14T10:00:00Z'
+  },
+  {
+    id: 'tip-04',
+    tag: 'SAFE SPACE & EKSPLORASI',
+    quote: '«Buat kesilapan semasa latihan bukan kegagalan, ia bukti anda sedang mencuba. Ruang pentas ini milik anda untuk berani meneroka potensi diri!»',
+    author: '— Sir Penasihat Seni Teater KPMBP',
+    subtext: 'Bakat terbaik dicungkil apabila anda berani keluar daripada zon selesa.',
+    created_at: '2026-08-16T10:00:00Z'
+  }
+];

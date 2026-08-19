@@ -8,6 +8,7 @@ import {
   Opportunity,
   SkillLesson,
   SirNote,
+  MentorTip,
   ArchiveRecord,
   BehindTheScenesItem,
   TalentProfile,
@@ -23,6 +24,7 @@ import {
   INITIAL_OPPORTUNITIES,
   INITIAL_SKILLS,
   INITIAL_SIR_NOTES,
+  INITIAL_MENTOR_TIPS,
   INITIAL_ARCHIVES,
   INITIAL_BTS,
   INITIAL_TALENTS,
@@ -52,6 +54,7 @@ export interface AppStore {
   opportunities: Opportunity[];
   skills: SkillLesson[];
   sir_notes: SirNote[];
+  mentor_tips: MentorTip[];
   archives: ArchiveRecord[];
   bts: BehindTheScenesItem[];
   talents: TalentProfile[];
@@ -91,6 +94,7 @@ function getInitialStore(): AppStore {
     opportunities: INITIAL_OPPORTUNITIES,
     skills: INITIAL_SKILLS,
     sir_notes: INITIAL_SIR_NOTES,
+    mentor_tips: INITIAL_MENTOR_TIPS,
     archives: INITIAL_ARCHIVES,
     bts: INITIAL_BTS,
     talents: INITIAL_TALENTS,
@@ -143,6 +147,7 @@ class StorageManager {
           opportunities: Array.isArray(parsed.opportunities) ? parsed.opportunities : initial.opportunities,
           skills: Array.isArray(parsed.skills) ? parsed.skills : initial.skills,
           sir_notes: Array.isArray(parsed.sir_notes) ? parsed.sir_notes : initial.sir_notes,
+          mentor_tips: Array.isArray(parsed.mentor_tips) ? parsed.mentor_tips : initial.mentor_tips,
           archives: Array.isArray(parsed.archives) ? parsed.archives : initial.archives,
           bts: Array.isArray(parsed.bts) ? parsed.bts : initial.bts,
           talents: Array.isArray(parsed.talents) ? parsed.talents : initial.talents,
@@ -992,6 +997,55 @@ class StorageManager {
     const sir_notes = this.store.sir_notes.filter(s => s.id !== id);
     this.saveLocal({ ...this.store, sir_notes });
     this.syncDeleteFromFirestore('sir_notes', id);
+    return true;
+  }
+
+  // --- MENTOR TIPS / AMANAT PENASIHAT ---
+  public getMentorTips(): MentorTip[] {
+    if (!this.store.mentor_tips || this.store.mentor_tips.length === 0) {
+      return [...INITIAL_MENTOR_TIPS];
+    }
+    return [...this.store.mentor_tips];
+  }
+
+  public addMentorTip(tip: Omit<MentorTip, 'id' | 'created_at'>): MentorTip {
+    const newTip: MentorTip = {
+      ...tip,
+      id: 'tip-' + Date.now(),
+      created_at: new Date().toISOString()
+    };
+    const currentTips = this.store.mentor_tips || INITIAL_MENTOR_TIPS;
+    const mentor_tips = [newTip, ...currentTips];
+    this.saveLocal({ ...this.store, mentor_tips });
+    this.syncDocToFirestore('mentor_tips', newTip.id, newTip);
+    return newTip;
+  }
+
+  public updateMentorTip(id: string, updates: Partial<MentorTip>): boolean {
+    const currentTips = this.store.mentor_tips || INITIAL_MENTOR_TIPS;
+    let updatedTip: MentorTip | null = null;
+    const mentor_tips = currentTips.map(t => {
+      if (t.id === id) {
+        updatedTip = { ...t, ...updates };
+        return updatedTip;
+      }
+      return t;
+    });
+    this.saveLocal({ ...this.store, mentor_tips });
+    if (updatedTip) {
+      this.syncDocToFirestore('mentor_tips', id, updatedTip);
+    }
+    return true;
+  }
+
+  public deleteMentorTip(id: string): boolean {
+    const currentTips = this.store.mentor_tips || INITIAL_MENTOR_TIPS;
+    if (currentTips.length <= 1) {
+      return false; // Retain at least one tip
+    }
+    const mentor_tips = currentTips.filter(t => t.id !== id);
+    this.saveLocal({ ...this.store, mentor_tips });
+    this.syncDeleteFromFirestore('mentor_tips', id);
     return true;
   }
 

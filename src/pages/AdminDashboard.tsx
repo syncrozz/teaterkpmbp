@@ -932,7 +932,7 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           <Edit3 className="w-4 h-4" />
-          <span>Sir's Corner ({sirNotes.length})</span>
+          <span>Bimbingan ({sirNotes.length})</span>
         </button>
 
         <button

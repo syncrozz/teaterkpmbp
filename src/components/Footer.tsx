@@ -48,7 +48,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdminLogin }) 
 
             <div className="flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900 p-3 rounded-2xl border border-white/5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Penyertaan terbuka sepanjang semester untuk semua jurusan.</span>
+              <span>Penyertaan terbuka sepanjang semester</span>
             </div>
           </div>
 
@@ -99,7 +99,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdminLogin }) 
               </li>
               <li>
                 <button onClick={() => onNavigate('sircorner')} className="hover:text-amber-400 transition-colors uppercase tracking-wider text-[11px]">
-                  Sir's Corner (Bimbingan)
+                  Bimbingan
                 </button>
               </li>
               <li>
@@ -141,26 +141,19 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdminLogin }) 
 
         </div>
 
-        {/* Bottom Bar matching design theme */}
-        <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-500 uppercase tracking-[0.15em]">
-          <p>
-            © {new Date().getFullYear()} KPMBP Teater Hub • Kolej Profesional MARA Bandar Penawar
-          </p>
-          <div className="flex items-center gap-3">
-            <span>Komuniti • Bakat • Persembahan</span>
-            <span>•</span>
-            <span>
-              DEVELOP By{' '}
-              <a
-                href="https://wa.me/60145313756"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-500 font-bold hover:text-amber-400 underline underline-offset-2 transition-colors cursor-pointer"
-              >
-                Syncrozz
-              </a>
-            </span>
-          </div>
+        {/* Bottom Bar */}
+        <div className="pt-6 border-t border-white/5 flex items-center justify-center text-[10px] text-neutral-500 uppercase tracking-[0.15em]">
+          <span>
+            DEVELOP BY{' '}
+            <a
+              href="https://sites.google.com/view/khairi-innovation"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber-500 font-bold hover:text-amber-400 underline underline-offset-2 transition-colors cursor-pointer"
+            >
+              SYNCROZZ
+            </a>
+          </span>
         </div>
       </div>
     </footer>

@@ -315,17 +315,26 @@ export const JoinCommunity: React.FC<JoinCommunityProps> = ({ onSuccessNavigate 
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <a
+              href="https://chat.whatsapp.com/KTMPzBpwMn5L09vNSrxfdJ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Sertai Group WhatsApp</span>
+            </a>
             {onSuccessNavigate && (
               <button
                 onClick={onSuccessNavigate}
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-red-950/40"
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-red-950/40 cursor-pointer"
               >
                 Lihat Acara & Kumpulan Semasa
               </button>
             )}
             <button
               onClick={handleResetForm}
-              className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-300 text-xs font-mono font-medium transition-colors border border-white/5"
+              className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-neutral-950 hover:bg-neutral-800 text-neutral-300 text-xs font-mono font-medium transition-colors border border-white/5 cursor-pointer"
             >
               Daftar Pelajar Baharu
             </button>

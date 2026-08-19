@@ -185,6 +185,15 @@ export interface SirNote {
   created_at: string;
 }
 
+export interface MentorTip {
+  id: string;
+  tag: string;
+  quote: string;
+  author: string;
+  subtext: string;
+  created_at: string;
+}
+
 export interface ArchiveRecord {
   id: string;
   title: string;

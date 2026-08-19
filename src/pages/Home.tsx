@@ -138,7 +138,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                   Pelajar
                 </span>
                 <span className="text-[10px] text-neutral-500 block truncate">
-                  Minat
+                  Berdaftar
                 </span>
               </div>
             </div>
@@ -240,10 +240,12 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
 
           {/* Stat 4: WhatsApp Status */}
-          <div 
-            onClick={() => onNavigate('join')}
-            className="bg-neutral-950/80 hover:bg-neutral-800/90 border border-green-500/20 hover:border-green-500/50 rounded-2xl p-4 transition-all hover:-translate-y-0.5 cursor-pointer group shadow-lg grid grid-cols-3 items-center gap-2.5"
-            title="Klik untuk menyertai Komuniti WhatsApp Rasmi"
+          <a 
+            href="https://chat.whatsapp.com/KTMPzBpwMn5L09vNSrxfdJ"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-neutral-950/80 hover:bg-neutral-800/90 border border-green-500/20 hover:border-green-500/50 rounded-2xl p-4 transition-all hover:-translate-y-0.5 cursor-pointer group shadow-lg grid grid-cols-3 items-center gap-2.5 block text-inherit"
+            title="Klik untuk menyertai Komuniti WhatsApp Rasmi (Buka Kumpulan WhatsApp)"
           >
             {/* Col 1: Icon & Label */}
             <div className="flex items-center gap-2 min-w-0">
@@ -277,7 +279,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
-          </div>
+          </a>
         </div>
       </section>
 
@@ -580,7 +582,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('sircorner')}
               className="text-xs text-amber-400 hover:text-amber-300 font-bold uppercase tracking-wider flex items-center gap-1"
             >
-              <span>Sir's Corner</span>
+              <span>Bimbingan</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

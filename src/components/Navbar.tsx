@@ -55,7 +55,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'opportunities', label: 'Peluang', icon: Trophy },
     { id: 'teams', label: 'Casting & Teams', icon: Users },
     { id: 'skills', label: 'Tips & Trick', icon: BookOpen },
-    { id: 'sircorner', label: "Sir's Corner", icon: GraduationCap },
+    { id: 'sircorner', label: 'Bimbingan', icon: GraduationCap },
     { id: 'archive', label: 'Arkib Teater', icon: Film },
     { id: 'talent', label: 'Hall of Talent', icon: Award },
     { id: 'calendar', label: 'Kalendar', icon: Calendar }
