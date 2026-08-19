@@ -186,7 +186,7 @@ export const TeamsHub: React.FC<TeamsHubProps> = ({ onJoinCommunityClick, isAdmi
               </p>
             </div>
             <div className="p-3.5 bg-neutral-950 rounded-2xl border border-white/5 space-y-1">
-              <span className="text-[10px] font-mono uppercase text-neutral-400">Pasukan Bersedia (Ready)</span>
+              <span className="text-[10px] font-mono uppercase text-neutral-400">Pasukan Ready</span>
               <p className="text-sm font-bold text-green-400 flex items-center gap-1.5">
                 <CheckCheck className="w-4 h-4" />
                 <span className="font-mono text-base">{readyTeamsCount}</span> Siap Pentas
