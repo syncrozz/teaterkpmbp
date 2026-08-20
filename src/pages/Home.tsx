@@ -564,7 +564,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 <GraduationCap className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-lg font-black uppercase text-white">Bimbingan Sir</h4>
+                <h4 className="text-lg font-black uppercase text-white">Bimbingan</h4>
                 <p className="text-[11px] text-neutral-400">Nasihat & nota motivasi</p>
               </div>
             </div>
@@ -572,7 +572,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('sircorner')}
               className="text-xs text-amber-400 hover:text-amber-300 font-bold uppercase tracking-wider flex items-center gap-1"
             >
-              <span>Bimbingan</span>
+              <span>Semua</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
