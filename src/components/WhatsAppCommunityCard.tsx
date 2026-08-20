@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, ShieldCheck, CheckCircle2, Users, Sparkles } from 'lucide-react';
+import { MessageCircle, Sparkles } from 'lucide-react';
 
 interface WhatsAppCommunityCardProps {
   onJoinClick?: () => void;
@@ -31,39 +31,25 @@ export const WhatsAppCommunityCard: React.FC<WhatsAppCommunityCardProps> = ({ on
           </div>
 
           <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
-            Semua peserta yang mendaftarkan minat akan disemak oleh penganjur dan dihubungi terus melalui WhatsApp sebelum dimasukkan ke dalam <strong className="text-white">Group WhatsApp Rasmi Teater KPMBP</strong>. Tiada pautan (link) dibuka secara umum demi keselamatan dan privasi pelajar.
+            Semua individu yang berminat dengan acara Teater (seni kreatif) digalakan untuk menyertai Komuniti kami melalui Group Whatsapp yang diwujudkan. Sekiranya anda minat, sila join group, komitmen tidak diperlukan, tidak keperluan untuk wajib hadir dalam apa-apa program, hanya maklumat dan galakan untuk mengembangkan bakat melalui Group Komuniti.
           </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
-            <div className="flex items-center gap-2 text-xs text-neutral-300 bg-neutral-950 p-3 rounded-2xl border border-white/5">
-              <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span>Tiada Teams? Boleh daftar!</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-neutral-300 bg-neutral-950 p-3 rounded-2xl border border-white/5">
-              <ShieldCheck className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span>Privasi No. Tel Terpelihara</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-neutral-300 bg-neutral-950 p-3 rounded-2xl border border-white/5">
-              <Users className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span>Bantuan Padanan Kumpulan</span>
-            </div>
-          </div>
         </div>
 
         <div className="lg:col-span-4 flex flex-col items-center lg:items-end justify-center gap-3">
           <div className="w-full bg-neutral-950 border border-white/5 rounded-3xl p-5 text-center space-y-3">
             <p className="text-[10px] text-neutral-400 uppercase tracking-widest font-mono">Pendaftaran Terbuka:</p>
             <p className="text-sm font-black text-amber-400 flex items-center justify-center gap-1.5 uppercase">
-              <Sparkles className="w-4 h-4" /> Semua Jurusan KPMBP
+              <Sparkles className="w-4 h-4" /> Semua Pelajar KPMBP
             </p>
-            {onJoinClick && (
-              <button
-                onClick={onJoinClick}
-                className="w-full py-3 px-4 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-bold text-xs uppercase tracking-widest transition-all transform active:scale-95 shadow-lg shadow-green-950/40 flex items-center justify-center gap-2"
-              >
-                Daftar Minat Sekarang
-              </button>
-            )}
+            <a
+              href="https://chat.whatsapp.com/KTMPzBpwMn5L09vNSrxfdJ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 px-4 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-bold text-xs uppercase tracking-widest transition-all transform active:scale-95 shadow-lg shadow-green-950/40 flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>JOIN KOMUNITI JOM!</span>
+            </a>
           </div>
         </div>
       </div>

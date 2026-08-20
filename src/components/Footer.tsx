@@ -1,21 +1,12 @@
 import React from 'react';
 import { PageView } from './Navbar';
-import { Sparkles, MessageCircle, Heart, Shield, Award } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (page: PageView) => void;
   onOpenAdminLogin?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdminLogin }) => {
-  const handleAdminClick = () => {
-    if (onOpenAdminLogin) {
-      onOpenAdminLogin();
-    } else {
-      onNavigate('admin');
-    }
-  };
-
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
     <footer className="bg-[#0A0A0A] border-t border-white/10 text-neutral-400 text-sm mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
@@ -46,10 +37,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdminLogin }) 
               Pusat komuniti rasmi, pembangunan bakat, arkib pementasan dan peluang pertandingan teater Kolej Profesional MARA Bandar Penawar. Direka untuk pelajar masa kini dan generasi akan datang.
             </p>
 
-            <div className="flex items-center gap-2 text-xs text-neutral-300 bg-neutral-900 p-3 rounded-2xl border border-white/5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Penyertaan terbuka sepanjang semester</span>
-            </div>
           </div>
 
           {/* Quick Links 1 */}
@@ -128,15 +115,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAdminLogin }) 
             <p className="text-xs text-neutral-400 leading-relaxed">
               Semua maklumat pendaftaran pelajar dilindungi di bawah polisi pengurusan aktiviti dalaman KPMBP.
             </p>
-            <div className="pt-2">
-              <button
-                onClick={handleAdminClick}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black hover:bg-amber-500 text-xs font-bold uppercase tracking-tight transition-all"
-              >
-                <Shield className="w-3.5 h-3.5" />
-                <span>Admin Access</span>
-              </button>
-            </div>
           </div>
 
         </div>

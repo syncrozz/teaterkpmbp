@@ -108,16 +108,6 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onNavigate('join')}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-red-950/40 active:scale-95 cursor-pointer"
-            >
-              <span>Daftar Minat</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
         </div>
 
         {/* 4 Interactive Hero Stat Cards - 3 Columns per card */}
@@ -349,7 +339,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('join')}
               className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all transform active:scale-95 shadow-xl shadow-red-950/60 flex items-center gap-2 cursor-pointer"
             >
-              <span>SERTAI KOMUNITI</span>
+              <span>DAFTAR MINAT</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button

@@ -142,23 +142,6 @@ export const EventSpotlight: React.FC<EventSpotlightProps> = ({
         </div>
       </div>
 
-      {/* Rules & Guidelines Summary */}
-      {event.rules && event.rules.length > 0 && (
-        <div className="space-y-2.5">
-          <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-400">
-            Syarat Ringkas Pertandingan:
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-neutral-300">
-            {event.rules.slice(0, 4).map((rule, idx) => (
-              <div key={idx} className="flex items-start gap-2.5 bg-neutral-950 p-3 rounded-2xl border border-white/5">
-                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{rule}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Action CTAs */}
       <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
         <button
